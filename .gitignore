@@ -41,6 +41,7 @@ yarn-error.log*
 *.tsbuildinfo
 next-env.d.ts
 .codex/preview.mjs
+.codex/set-vercel-env.mjs
 
 .vercel
 .env*.local
