@@ -27,10 +27,10 @@ try {
   if ($branchMatches.Count -gt 1) { throw 'Multiple Neon branches match release identity.' }
   if ($journal.resources.neonBranchId) {
     $branchById = @($branches | Where-Object { $_.id -eq $journal.resources.neonBranchId })
-    if ($branchById.Count -gt 1 -or ($branchById.Count -eq 1 -and ($branchById[0].name -ne $journal.release -or $branchById[0].init_source -ne 'schema-only'))) { throw 'Recorded Neon branch identity mismatch.' }
+    if ($branchById.Count -gt 1 -or ($branchById.Count -eq 1 -and ($branchById[0].name -ne $journal.release -or $branchById[0].init_source -notin @('schema-only','parent-schema')))) { throw 'Recorded Neon branch identity mismatch.' }
     if ($branchMatches.Count -eq 1 -and $branchMatches[0].id -ne $journal.resources.neonBranchId) { throw 'Release name points to another Neon branch.' }
   } elseif ($branchMatches.Count -eq 1) {
-    if ($branchMatches[0].init_source -ne 'schema-only') { throw 'Recovered Neon branch is not schema-only.' }
+    if ($branchMatches[0].init_source -notin @('schema-only','parent-schema')) { throw 'Recovered Neon branch is not schema-only.' }
     $journal.resources.neonBranchId = $branchMatches[0].id
     Add-Event $paths $journal 'recover-neon-branch' 'complete'
   }
