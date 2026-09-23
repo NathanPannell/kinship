@@ -45,9 +45,26 @@ The private password can be used before an OAuth app is configured. The GitHub s
 
 Create a Vercel project for this repository, set the production environment variables, and deploy the `main` branch. Run `npm run migrate` against the production Neon branch before first use. Keep `AGENT_API_TOKEN`, `SESSION_SECRET`, OAuth secret, password, and database URLs server-only. Do not add them with a `NEXT_PUBLIC_` prefix. `/api/ready` checks the latest applied migration when called; no automated health polling is configured.
 
+## Draft PR preview lifecycle
+
+This repository has one Vercel app and one Neon database. It has no Railway service, worker, staging branch, or staging database. The preview wrapper validates a draft PR against the current `main` commit and creates a schema-only Neon branch from the recorded **development** branch. It then creates a fresh database, applies migrations, and explicitly deploys the PR head to Vercel Preview. It never copies development contacts or persistent application secrets. GitHub OAuth is disabled in previews; a unique password and agent token are generated for each preview.
+
+Run these commands from a clean canonical repository checkout at the current `origin/main` commit. The default invocation is a provider-free plan:
+
+```powershell
+pwsh -File scripts/preview-pr.ps1 -PullRequest 123
+pwsh -File scripts/preview-pr.ps1 -PullRequest 123 -Apply
+pwsh -File scripts/teardown-preview-pr.ps1 -PullRequest 123
+pwsh -File scripts/teardown-preview-pr.ps1 -PullRequest 123 -Apply
+```
+
+Before pushing a preview branch, audit live GitHub workflow triggers and Vercel Git integration settings. Feature pushes and PR creation must create no automatic deployment. Also review Vercel system variables for external cloud trust and protection bypasses. Set `NEON_API_KEY` and `VERCEL_TOKEN` in the trusted local PowerShell process before `-Apply`; do not place them in the repository. The wrappers use the checked-in IDs in `scripts/preview-config.psd1`. Review those IDs if provider projects or the development parent change. The same Windows host and user profile owns create and teardown.
+
+The journal, lock, and encrypted preview login values live in `../preview-lifecycle/pr-<number>/`, outside the Git repository. The password and agent token in `preview-credentials.dpapi.json` can be decrypted only by the creating Windows user profile; load them directly into browser or API testing tools without printing them. The journal has IDs and checkpoints only. Do not run another create while its active record exists. If create stops after a provider call, inspect the journal and run the exact teardown command; the teardown resolves uncertain responses by unique release metadata and records three consecutive complete inventory observations before marking cleanup complete. Keep the preview until its browser journey and any intended persistent release have been verified. A successful `/api/ready` check alone does not complete browser verification.
+
 ## LinkedIn CSV import
 
-Export your official Connections CSV from LinkedIn, then open **Import** in the app. Upload the CSV and review the counts before committing. The importer accepts common heading variants, normalizes LinkedIn profile URLs, and uses them as the preferred deduplication key. It fills missing company, role, email, or URL values on matches; it preserves notes, cadence, priority, and interaction history. The upload limit is 4 MB. No scraping or LinkedIn automation is used.
+Export your official Connections and messages CSV files from LinkedIn, then open **Import** in the app. Each file is parsed in the browser. Review the matched dates, choose the people to track, set priority and cadence, and save only the selected contact metadata. The files and message text are not uploaded. No scraping or LinkedIn automation is used.
 
 ## Agent API
 
@@ -56,6 +73,7 @@ Send `Authorization: Bearer <AGENT_API_TOKEN>` to:
 - `GET /api/agent/suggestions` for today's contacts and upcoming contacts
 - `GET /api/agent/contacts?search=...` for search and filters
 - `GET /api/agent/contacts/{id}` for a profile and recent interactions
+- `PATCH /api/agent/contacts/{id}` to update a profile or its follow-up settings
 - `POST /api/agent/interactions` with `contact_id`, `channel`, `note`, and optional ISO `occurred_at`
 
-The machine-readable OpenAPI 3.1 document is at `/openapi.json`. The agent API cannot edit or delete contacts and cannot send messages.
+The interactive API documentation and playground are at `/api-docs`; the machine-readable OpenAPI 3.1 document is at `/openapi.json`. The agent API cannot delete contacts or send messages.

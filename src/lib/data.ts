@@ -2,7 +2,7 @@ import { query } from "./db";
 import { decorateContact, rankSuggestions } from "./recommendations";
 import type { Contact, Interaction, Suggestion } from "./types";
 import type { z } from "zod";
-import { contactSchema, contactPatchSchema, interactionSchema, interactionPatchSchema } from "./validation";
+import { contactSchema, contactPatchSchema, bulkContactUpdateSchema, bulkContactDeleteSchema, interactionSchema, interactionPatchSchema } from "./validation";
 
 export async function allContacts(): Promise<Contact[]> {
   return query<Contact>("SELECT * FROM contacts ORDER BY name ASC");
@@ -69,6 +69,34 @@ export async function updateContact(id: string, input: z.infer<typeof contactPat
     [id, merged.name, merged.company, merged.role, merged.linkedin_url, merged.photo_url, merged.email, merged.phone, merged.location, merged.priority, merged.cadence_days, merged.notes],
   );
   return contact ?? null;
+}
+
+export async function updateContactsBulk(input: z.infer<typeof bulkContactUpdateSchema>): Promise<number> {
+  const { ids, updates } = bulkContactUpdateSchema.parse(input);
+  const [result] = await query<{ count: number }>(
+    `WITH updated AS (
+      UPDATE contacts SET priority=COALESCE($2::text,priority), cadence_days=COALESCE($3::int,cadence_days), updated_at=now()
+      WHERE id=ANY($1::uuid[]) RETURNING id
+    ) SELECT COUNT(*)::int AS count FROM updated`,
+    [ids, updates.priority ?? null, updates.cadence_days ?? null],
+  );
+  return result.count;
+}
+
+export async function deleteContactsBulk(input: z.infer<typeof bulkContactDeleteSchema>): Promise<number> {
+  const { ids } = bulkContactDeleteSchema.parse(input);
+  const [result] = await query<{ count: number }>(
+    "WITH deleted AS (DELETE FROM contacts WHERE id=ANY($1::uuid[]) RETURNING id) SELECT COUNT(*)::int AS count FROM deleted",
+    [ids],
+  );
+  return result.count;
+}
+
+export async function deleteAllContacts(): Promise<number> {
+  const [result] = await query<{ count: number }>(
+    "WITH deleted AS (DELETE FROM contacts RETURNING id) SELECT COUNT(*)::int AS count FROM deleted",
+  );
+  return result.count;
 }
 
 async function refreshLastContacted(contactId: string) {

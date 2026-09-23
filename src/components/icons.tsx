@@ -1,6 +1,7 @@
 import {
   ArrowLeft,
   ArrowUpRight,
+  BookOpen,
   CalendarDays,
   Check,
   ChevronDown,
@@ -34,6 +35,7 @@ import {
 export {
   ArrowLeft,
   ArrowUpRight,
+  BookOpen,
   CalendarDays,
   Check,
   ChevronDown,

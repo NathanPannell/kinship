@@ -1,0 +1,458 @@
+[
+  {
+    "ordinal": 1,
+    "name": "Kurt Archer",
+    "role": "Integrated Projects & Digital Support Coordinator",
+    "company": "Indigenomics",
+    "priority": "normal",
+    "cadenceDays": 60
+  },
+  {
+    "ordinal": 2,
+    "name": "Isaac Pua",
+    "role": "Software Engineer Intern",
+    "company": "Yureka",
+    "priority": "low",
+    "cadenceDays": 60
+  },
+  {
+    "ordinal": 3,
+    "name": "John Oram",
+    "role": "Co-Founder",
+    "company": "VeilStream",
+    "priority": "high",
+    "cadenceDays": 30
+  },
+  {
+    "ordinal": 4,
+    "name": "Geoffrey Shera",
+    "role": "Sr Embedded Software Developer",
+    "company": "Motus Design Group",
+    "priority": "normal",
+    "cadenceDays": 30
+  },
+  {
+    "ordinal": 5,
+    "name": "Aomi Jokoji",
+    "role": "Software Engineer",
+    "company": "Jobber",
+    "priority": "low",
+    "cadenceDays": 60
+  },
+  {
+    "ordinal": 6,
+    "name": "Simon Erlic",
+    "role": "Software Engineer",
+    "company": "Elastic Energy",
+    "priority": "low",
+    "cadenceDays": 60
+  },
+  {
+    "ordinal": 7,
+    "name": "Nicholas Hepner",
+    "role": "Chief Technology Officer",
+    "company": "fernwood agentic",
+    "priority": "low",
+    "cadenceDays": 60
+  },
+  {
+    "ordinal": 8,
+    "name": "Junaid Ahmad",
+    "role": "Software Engineering, Growth",
+    "company": "Shakepay",
+    "priority": "high",
+    "cadenceDays": 15
+  },
+  {
+    "ordinal": 9,
+    "name": "Carmello Giron",
+    "role": "Videographer and Photographer",
+    "company": "Vancouver Island Business",
+    "priority": "high",
+    "cadenceDays": 7
+  },
+  {
+    "ordinal": 10,
+    "name": "Alhwyn Geonzon",
+    "role": "Jr Software Developer",
+    "company": "Gist Applications",
+    "priority": "high",
+    "cadenceDays": 30
+  },
+  {
+    "ordinal": 11,
+    "name": "Keiver Tremblay",
+    "role": "Chief Operating Officer",
+    "company": "Elastic Energy",
+    "priority": "high",
+    "cadenceDays": 30
+  },
+  {
+    "ordinal": 12,
+    "name": "Anu Jolliffe, PMP",
+    "role": "Applied AI Practitioner | Transformative Technologist | Public Speaker",
+    "company": "Grey Sky Tech",
+    "priority": "high",
+    "cadenceDays": 30
+  },
+  {
+    "ordinal": 13,
+    "name": "Calum Bird",
+    "role": "Founder",
+    "company": "Trelent Inc.",
+    "priority": "normal",
+    "cadenceDays": 30
+  },
+  {
+    "ordinal": 14,
+    "name": "Aleksandra Komagorkina",
+    "role": "iOS Engineer",
+    "company": "aleksandra.tech",
+    "priority": "normal",
+    "cadenceDays": 30
+  },
+  {
+    "ordinal": 15,
+    "name": "Peter Salmon",
+    "role": "Co-Founder",
+    "company": "Capital Reasoning Solutions",
+    "priority": "normal",
+    "cadenceDays": 30
+  },
+  {
+    "ordinal": 16,
+    "name": "K Krasnow Waterman",
+    "role": "CEO",
+    "company": "Tcomplete Canada Inc and LawTechIntersect, LLC",
+    "priority": "high",
+    "cadenceDays": 30
+  },
+  {
+    "ordinal": 17,
+    "name": "Abil Nurgaliyev",
+    "role": "Quant Equity",
+    "company": "BCI",
+    "priority": "low",
+    "cadenceDays": 60
+  },
+  {
+    "ordinal": 18,
+    "name": "Connor Turland",
+    "role": "Co-founder & CEO",
+    "company": "Cyrus",
+    "priority": "high",
+    "cadenceDays": 30
+  },
+  {
+    "ordinal": 19,
+    "name": "Jett Schreiber",
+    "role": "IT Support Specialist",
+    "company": "Blackman Support Services Ltd",
+    "priority": "low",
+    "cadenceDays": 60
+  },
+  {
+    "ordinal": 20,
+    "name": "Karae White (she/her) BEd, eCC, CCDP",
+    "role": "Career Educator",
+    "company": "University of Victoria",
+    "priority": "normal",
+    "cadenceDays": 30
+  },
+  {
+    "ordinal": 21,
+    "name": "Mohan Selvarajan",
+    "role": "Business Owner",
+    "company": "Pacific City Window Cleaning",
+    "priority": "normal",
+    "cadenceDays": 30
+  },
+  {
+    "ordinal": 22,
+    "name": "Seth Messier",
+    "role": null,
+    "company": null,
+    "priority": "low",
+    "cadenceDays": 15
+  },
+  {
+    "ordinal": 23,
+    "name": "Liam Squires",
+    "role": "Technical Business Analyst",
+    "company": "Acturis Canada Inc.",
+    "priority": "low",
+    "cadenceDays": 60
+  },
+  {
+    "ordinal": 24,
+    "name": "Dino Buljubasic",
+    "role": "Software Developer",
+    "company": "ICBC (Insurance Corporation of British Columbia)",
+    "priority": "normal",
+    "cadenceDays": 60
+  },
+  {
+    "ordinal": 25,
+    "name": "Crystal Brewster",
+    "role": "Manager IS Solutions Services",
+    "company": "ICBC (Insurance Corporation of British Columbia)",
+    "priority": "normal",
+    "cadenceDays": 60
+  },
+  {
+    "ordinal": 26,
+    "name": "Jeremy Prellwitz",
+    "role": "Manager, Corporate Applications",
+    "company": "ICBC (Insurance Corporation of British Columbia)",
+    "priority": "normal",
+    "cadenceDays": 60
+  },
+  {
+    "ordinal": 27,
+    "name": "Scott Bell",
+    "role": "IS Solutions Leader",
+    "company": "ICBC (Insurance Corporation of British Columbia)",
+    "priority": "normal",
+    "cadenceDays": 60
+  },
+  {
+    "ordinal": 28,
+    "name": "Adán Sierra Calderón",
+    "role": "Software Developer - Intermediate",
+    "company": "ICBC (Insurance Corporation of British Columbia)",
+    "priority": "high",
+    "cadenceDays": 30
+  },
+  {
+    "ordinal": 29,
+    "name": "Stella Zarei",
+    "role": "Software Engineer II",
+    "company": "AMD",
+    "priority": "normal",
+    "cadenceDays": 30
+  },
+  {
+    "ordinal": 30,
+    "name": "Arya Punjabi",
+    "role": "swe intern",
+    "company": "Apera AI",
+    "priority": "normal",
+    "cadenceDays": 7
+  },
+  {
+    "ordinal": 31,
+    "name": "Valery Angelique",
+    "role": "Software Engineer",
+    "company": "The University of British Columbia",
+    "priority": "low",
+    "cadenceDays": 30
+  },
+  {
+    "ordinal": 32,
+    "name": "Sydney Macdonald",
+    "role": "Apprentice",
+    "company": "SFL Missions Inc.",
+    "priority": "low",
+    "cadenceDays": 30
+  },
+  {
+    "ordinal": 33,
+    "name": "Glen Pierce",
+    "role": "Senior Tech Lead",
+    "company": "impact.com",
+    "priority": "high",
+    "cadenceDays": 30
+  },
+  {
+    "ordinal": 34,
+    "name": "Ashley Philip",
+    "role": null,
+    "company": null,
+    "priority": "low",
+    "cadenceDays": 60
+  },
+  {
+    "ordinal": 35,
+    "name": "Mansahaj Singh Popli",
+    "role": "Software Engineer",
+    "company": "AlphaSense",
+    "priority": "normal",
+    "cadenceDays": 30
+  },
+  {
+    "ordinal": 36,
+    "name": "Mohammad Chegini",
+    "role": "AI Delivery Engineer, LLM Data & Benchmarking",
+    "company": "Turing",
+    "priority": "low",
+    "cadenceDays": 7
+  },
+  {
+    "ordinal": 37,
+    "name": "Todd Charter",
+    "role": "President",
+    "company": "Cognia AI Inc.",
+    "priority": "normal",
+    "cadenceDays": 30
+  },
+  {
+    "ordinal": 38,
+    "name": "Gerry Peng",
+    "role": "Data & Analytics Engineer",
+    "company": "BCI",
+    "priority": "low",
+    "cadenceDays": 60
+  },
+  {
+    "ordinal": 39,
+    "name": "Tristan Tucker",
+    "role": "UVic AI President",
+    "company": "UVic AI",
+    "priority": "low",
+    "cadenceDays": 60
+  },
+  {
+    "ordinal": 40,
+    "name": "Finn Archinuk",
+    "role": "Machine Learning Consultant",
+    "company": "Natural Sciences and Engineering Research Council of Canada (NSERC)",
+    "priority": "low",
+    "cadenceDays": 60
+  },
+  {
+    "ordinal": 41,
+    "name": "Triston Grayston",
+    "role": "AI Developer",
+    "company": "Eviviz",
+    "priority": "low",
+    "cadenceDays": 60
+  },
+  {
+    "ordinal": 42,
+    "name": "Paurav H Param",
+    "role": "Fellow",
+    "company": "Intern Insider",
+    "priority": "high",
+    "cadenceDays": 7
+  },
+  {
+    "ordinal": 43,
+    "name": "Alex Garrett",
+    "role": "Filmmaker",
+    "company": "Wispr Flow",
+    "priority": "low",
+    "cadenceDays": 30
+  },
+  {
+    "ordinal": 44,
+    "name": "Ziming Dong",
+    "role": "Research Assistant",
+    "company": "University of Victoria",
+    "priority": "low",
+    "cadenceDays": 60
+  },
+  {
+    "ordinal": 45,
+    "name": "David Kim",
+    "role": "Member",
+    "company": "UVic Game Development",
+    "priority": "low",
+    "cadenceDays": 60
+  },
+  {
+    "ordinal": 46,
+    "name": "Thomas Yasinchuk",
+    "role": "Software Engineer",
+    "company": "IREN",
+    "priority": "low",
+    "cadenceDays": 60
+  },
+  {
+    "ordinal": 47,
+    "name": "Christopher Huk",
+    "role": "Junior Software Developer",
+    "company": "AbeBooks, an Amazon company",
+    "priority": "high",
+    "cadenceDays": 7
+  },
+  {
+    "ordinal": 48,
+    "name": "Ryan Lewis",
+    "role": null,
+    "company": null,
+    "priority": "low",
+    "cadenceDays": 60
+  },
+  {
+    "ordinal": 49,
+    "name": "Ariana Allsopp",
+    "role": "Teaching Assistant for Intro to Computer Graphics",
+    "company": "University of Victoria",
+    "priority": "low",
+    "cadenceDays": 60
+  },
+  {
+    "ordinal": 50,
+    "name": "Steve Anil John",
+    "role": "Software Engineer",
+    "company": "AUVIC",
+    "priority": "low",
+    "cadenceDays": 30
+  },
+  {
+    "ordinal": 51,
+    "name": "Keon Senez",
+    "role": "Student Research Assistant (Accelerated Masters)",
+    "company": "University of Waterloo Fire Research Lab",
+    "priority": "low",
+    "cadenceDays": 60
+  },
+  {
+    "ordinal": 52,
+    "name": "Oliver Brubacher",
+    "role": "Junior Hydrogeologist",
+    "company": "Piteau Associates Engineering",
+    "priority": "low",
+    "cadenceDays": 15
+  },
+  {
+    "ordinal": 53,
+    "name": "Karl Hilario",
+    "role": "Team Member",
+    "company": "Tim Hortons",
+    "priority": "low",
+    "cadenceDays": 15
+  },
+  {
+    "ordinal": 54,
+    "name": "Jackson Morgan",
+    "role": "Activity Leader",
+    "company": "Wintemute Boys and Girls Club",
+    "priority": "low",
+    "cadenceDays": 7
+  },
+  {
+    "ordinal": 55,
+    "name": "Jeff Pannell",
+    "role": "Manager - Accounting",
+    "company": "Odlum Brown Limited",
+    "priority": "low",
+    "cadenceDays": 7
+  },
+  {
+    "ordinal": 56,
+    "name": "Teala Pannell",
+    "role": "Residential Assistant",
+    "company": "Acadia University",
+    "priority": "low",
+    "cadenceDays": 7
+  },
+  {
+    "ordinal": 57,
+    "name": "Colette Pannell",
+    "role": "Controller",
+    "company": "AMJ Campbell BC Group",
+    "priority": "low",
+    "cadenceDays": 7
+  }
+]
