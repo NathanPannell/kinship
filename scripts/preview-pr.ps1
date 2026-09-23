@@ -89,7 +89,7 @@ try {
     Add-Event $paths $journal 'create-neon-branch' 'intent'
     $expiry = [DateTime]::UtcNow.AddDays(7).ToString('yyyy-MM-ddTHH:mm:ssZ')
     $created = Invoke-Neon POST "$neonPath/branches" @{ branch=@{ name=$release; parent_id=$script:PreviewConfig.NeonParentBranchId; init_source='schema-only'; expires_at=$expiry }; endpoints=@(@{type='read_write'}); annotation_value=@{ repository=$script:PreviewConfig.Repository; pr="$PullRequest"; sha=$pr.headRefOid; release=$release } }
-    if ($created.branch.name -ne $release -or $created.branch.init_source -ne 'schema-only' -or -not $created.branch.id) { throw 'Neon returned an unexpected branch identity.' }
+    if ($created.branch.name -ne $release -or $created.branch.init_source -notin @('schema-only','parent-schema') -or -not $created.branch.id) { throw 'Neon returned an unexpected branch identity.' }
     $journal.resources.neonBranchId = $created.branch.id
     Add-Event $paths $journal 'create-neon-branch' 'complete'
 
