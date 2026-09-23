@@ -337,6 +337,13 @@
   text-underline-offset: 3px;
 }
 
+.textAction:disabled {
+  color: var(--color-muted);
+  cursor: not-allowed;
+  opacity: 0.58;
+  text-decoration: none;
+}
+
 .selectionTools {
   display: flex;
   align-items: center;
@@ -539,8 +546,12 @@
 }
 
 .bulkSettings {
+  display: grid;
+  grid-template-columns: minmax(135px, 0.62fr) minmax(0, 2.12fr);
+  align-items: center;
+  gap: 15px;
   margin: 0 24px 21px;
-  padding: 17px 18px 18px;
+  padding: 11px 14px;
   border: 1px solid var(--color-line);
   border-radius: var(--radius-md);
   background: var(--color-surface-raised);
@@ -548,10 +559,10 @@
 
 .bulkHeading {
   display: flex;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 15px;
-  margin-bottom: 15px;
+  align-items: flex-start;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 0;
 }
 
 .bulkHeading h3,
@@ -563,21 +574,21 @@
 }
 
 .bulkHeading p {
-  margin: 4px 0 0;
+  margin: 2px 0 0;
   color: var(--color-muted);
   font-size: 11px;
 }
 
-.bulkHint {
-  color: var(--color-muted);
-  font-size: 10px;
-  white-space: nowrap;
+.bulkActions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
 }
 
 .bulkGroups {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 24px;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 14px;
 }
 
 .bulkGroup {
@@ -588,10 +599,22 @@
 }
 
 .bulkGroup legend {
-  margin-bottom: 8px;
+  margin-bottom: 5px;
   color: var(--color-ink-soft);
-  font-size: 11px;
+  font-size: 10px;
   font-weight: 640;
+}
+
+.bulkGroup:disabled {
+  opacity: 0.48;
+}
+
+.bulkGroup:disabled .choice {
+  cursor: not-allowed;
+}
+
+.bulkGroup:disabled .choice:hover {
+  background: var(--color-surface);
 }
 
 .choiceRow {
@@ -609,7 +632,7 @@
 .choice {
   position: relative;
   display: grid;
-  min-height: 36px;
+  min-height: 34px;
   place-items: center;
   border-right: 1px solid var(--color-line);
   background: var(--color-surface);
@@ -696,45 +719,168 @@
   font-variant-numeric: tabular-nums;
 }
 
-.settingsList {
+.settingsScroller {
+  overflow-x: auto;
   margin: 0 24px;
-  border-top: 1px solid var(--color-line);
+  scrollbar-color: var(--color-line-strong) transparent;
+  scrollbar-width: thin;
 }
 
-.settingsPerson {
-  padding: 15px 5px 17px;
+.settingsList {
+  width: 100%;
+  min-width: 650px;
+  table-layout: fixed;
+  border-collapse: collapse;
+}
+
+.settingsList th,
+.settingsList td {
+  min-width: 0;
+  padding: 6px 8px;
   border-bottom: 1px solid var(--color-line);
 }
 
-.settingsPersonHead {
-  display: flex;
-  align-items: center;
-  gap: 10px;
+.settingsList thead th {
+  padding-top: 0;
+  padding-bottom: 7px;
+  color: var(--color-muted);
+  font-size: 10px;
+  font-weight: 650;
+  text-align: left;
 }
 
-.settingsPersonHead .personAvatar {
-  width: 32px;
-  height: 32px;
+.settingsList thead th:first-child {
+  width: 36%;
+}
+
+.settingsList thead th:nth-child(2) {
+  width: 17%;
+}
+
+.settingsList thead th:nth-child(3) {
+  width: 25%;
+}
+
+.settingsList thead th:last-child {
+  width: 22%;
+  text-align: right;
+}
+
+.settingsList tbody th {
+  font-weight: 400;
+  text-align: left;
+}
+
+.settingsPerson {
+  height: 63px;
+}
+
+.settingsPerson:hover th,
+.settingsPerson:hover td {
+  background: color-mix(in srgb, var(--color-surface-muted) 48%, transparent);
+}
+
+.settingsPerson:last-child th,
+.settingsPerson:last-child td {
+  border-bottom: 0;
+}
+
+.settingsIdentity {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  min-height: 44px;
+  cursor: pointer;
+}
+
+.settingsIdentity input {
+  width: 16px;
+  height: 16px;
+  flex: 0 0 auto;
+  margin: 0;
+  accent-color: var(--color-green);
+}
+
+.settingsIdentity input:focus-visible {
+  outline: 3px solid color-mix(in srgb, var(--color-green) 42%, transparent);
+  outline-offset: 3px;
+}
+
+.settingsIdentity .personAvatar {
+  width: 30px;
+  height: 30px;
+  flex: 0 0 auto;
+  font-size: 10px;
+}
+
+.settingsIdentity .personCopy {
+  min-width: 0;
+}
+
+.settingsIdentity .personCopy strong,
+.settingsIdentity .personCopy span {
+  max-width: 100%;
+  font-size: 12px;
+}
+
+.settingsIdentity .personCopy span {
   font-size: 10px;
 }
 
 .settingLastContact {
-  margin-left: auto;
+  overflow: hidden;
   color: var(--color-muted);
   font-size: 10px;
   font-variant-numeric: tabular-nums;
   text-align: right;
-}
-
-.personSliders {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 28px;
-  margin: 12px 0 0 42px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .sliderSetting {
   min-width: 0;
+}
+
+.sliderSettingCompact .sliderTitle {
+  gap: 5px;
+  margin-bottom: 0;
+  font-size: 9px;
+}
+
+.sliderSettingCompact .sliderTitle label,
+.sliderSettingCompact .sliderTitle > span {
+  overflow: hidden;
+  font-size: 9px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sliderSettingCompact .range {
+  height: 18px;
+}
+
+.sliderSettingCompact .range::-webkit-slider-runnable-track {
+  height: 3px;
+}
+
+.sliderSettingCompact .range::-moz-range-track {
+  height: 3px;
+}
+
+.sliderSettingCompact .range::-webkit-slider-thumb {
+  width: 12px;
+  height: 12px;
+  margin-top: -4.5px;
+}
+
+.sliderSettingCompact .range::-moz-range-thumb {
+  width: 9px;
+  height: 9px;
+}
+
+.sliderSettingCompact .range:focus-visible {
+  outline-offset: 2px;
 }
 
 .sliderTitle {
@@ -926,8 +1072,12 @@
 
   .matchSummary,
   .peopleList,
-  .bulkSettings,
-  .settingsList {
+  .bulkSettings {
+    margin-right: 19px;
+    margin-left: 19px;
+  }
+
+  .settingsScroller {
     margin-right: 19px;
     margin-left: 19px;
   }
@@ -949,14 +1099,6 @@
     margin-left: 19px;
   }
 
-  .bulkGroups {
-    gap: 15px;
-  }
-
-  .personSliders {
-    margin-left: 42px;
-    gap: 18px;
-  }
 }
 
 @media (max-width: 600px) {
@@ -1095,19 +1237,21 @@
   .bulkSettings {
     margin-right: 14px;
     margin-left: 14px;
-    padding: 14px 12px;
+    padding: 11px 12px;
+    grid-template-columns: 1fr;
+    gap: 10px;
   }
 
   .bulkHeading {
-    align-items: flex-start;
-    flex-direction: column;
-    gap: 5px;
-    margin-bottom: 12px;
+    align-items: center;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 5px 12px;
   }
 
   .bulkGroups {
     grid-template-columns: 1fr;
-    gap: 14px;
+    gap: 10px;
   }
 
   .settingsHeading {
@@ -1115,32 +1259,13 @@
     margin-left: 14px;
   }
 
-  .settingsList {
+  .settingsScroller {
     margin-right: 14px;
     margin-left: 14px;
   }
 
-  .settingsPerson {
-    padding: 13px 1px 15px;
-  }
-
-  .settingsPersonHead {
-    gap: 8px;
-  }
-
-  .settingsPersonHead .personCopy strong {
-    max-width: 52vw;
-  }
-
   .settingLastContact {
-    max-width: 95px;
     font-size: 9px;
-  }
-
-  .personSliders {
-    grid-template-columns: 1fr;
-    gap: 12px;
-    margin: 12px 5px 0 40px;
   }
 
   .finishNote {
@@ -1190,5 +1315,15 @@
 
   .choiceSelected[data-cadence="60"] {
     background: #354e66;
+  }
+}
+
+@media (pointer: coarse) {
+  .choice {
+    min-height: 44px;
+  }
+
+  .sliderSettingCompact .range {
+    height: 44px;
   }
 }

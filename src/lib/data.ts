@@ -1,11 +1,11 @@
 import { query } from "./db";
-import { decorateContact, rankSuggestions } from "./recommendations";
+import { decorateContact, isDue, rankSuggestions } from "./recommendations";
 import type { Contact, Interaction, Suggestion } from "./types";
 import type { z } from "zod";
 import { contactSchema, contactPatchSchema, bulkContactUpdateSchema, bulkContactDeleteSchema, interactionSchema, interactionPatchSchema } from "./validation";
 
 export async function allContacts(): Promise<Contact[]> {
-  return query<Contact>("SELECT * FROM contacts ORDER BY name ASC");
+  return query<Contact>("SELECT c.*, p.updated_at AS uploaded_photo_updated_at FROM contacts c LEFT JOIN contact_photos p ON p.contact_id=c.id ORDER BY c.name ASC");
 }
 
 export async function hasContacts(): Promise<boolean> {
@@ -14,7 +14,7 @@ export async function hasContacts(): Promise<boolean> {
 }
 
 export async function contactById(id: string): Promise<Contact | null> {
-  return (await query<Contact>("SELECT * FROM contacts WHERE id = $1", [id]))[0] ?? null;
+  return (await query<Contact>("SELECT c.*, p.updated_at AS uploaded_photo_updated_at FROM contacts c LEFT JOIN contact_photos p ON p.contact_id=c.id WHERE c.id = $1", [id]))[0] ?? null;
 }
 
 export async function interactionsFor(id: string): Promise<Interaction[]> {
@@ -40,7 +40,7 @@ export async function listContacts(options: { search?: string; priority?: string
   const rows = (await decoratedContacts()).filter((contact) => {
     if (search && ![contact.name, contact.company, contact.role].some((part) => part?.toLowerCase().includes(search))) return false;
     if (options.priority && options.priority !== "all" && contact.priority !== options.priority) return false;
-    if (options.overdue === "true" && (contact.days_since_contact !== null && contact.days_since_contact < contact.cadence_days)) return false;
+    if (options.overdue === "true" && !isDue(contact)) return false;
     return true;
   });
   if (options.sort === "next_due") rows.sort((a, b) => (a.next_recommended_at ?? "").localeCompare(b.next_recommended_at ?? ""));
@@ -68,7 +68,7 @@ export async function updateContact(id: string, input: z.infer<typeof contactPat
       priority=$10, cadence_days=$11, notes=$12, updated_at=now() WHERE id=$1 RETURNING *`,
     [id, merged.name, merged.company, merged.role, merged.linkedin_url, merged.photo_url, merged.email, merged.phone, merged.location, merged.priority, merged.cadence_days, merged.notes],
   );
-  return contact ?? null;
+  return contact ? await contactById(id) : null;
 }
 
 export async function updateContactsBulk(input: z.infer<typeof bulkContactUpdateSchema>): Promise<number> {

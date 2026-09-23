@@ -45,9 +45,7 @@ export function relativeContactDate(value?: string | null) {
 
 export function nextDueDate(contact: Contact) {
   if (!contact.last_contacted_at) return "Ready to start";
-  const due = new Date(contact.last_contacted_at);
-  due.setDate(due.getDate() + contact.cadence_days);
-  return formatDate(due.toISOString());
+  return contact.next_recommended_at ? formatDate(contact.next_recommended_at) : "Unknown";
 }
 
 export function priorityClass(priority: Priority) {

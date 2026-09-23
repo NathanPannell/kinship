@@ -5,7 +5,7 @@ import { contactById, interactionsFor, updateContact } from "@/lib/data";
 import { failure } from "@/lib/http";
 type Context = { params: Promise<{ id: string }> };
 export async function GET(request: NextRequest, context: Context) {
-  const denied = requireAgentToken(request); if (denied) return denied;
+  const denied = await requireAgentToken(request); if (denied) return denied;
   try {
     const id = z.uuid().parse((await context.params).id);
     const contact = await contactById(id);
@@ -14,7 +14,7 @@ export async function GET(request: NextRequest, context: Context) {
   } catch (error) { return failure(error); }
 }
 export async function PATCH(request: NextRequest, context: Context) {
-  const denied = requireAgentToken(request); if (denied) return denied;
+  const denied = await requireAgentToken(request); if (denied) return denied;
   try {
     const id = z.uuid().parse((await context.params).id);
     const contact = await updateContact(id, await request.json());
