@@ -3,12 +3,13 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import type { ReactNode } from "react";
-import { FileUp, HeartHandshake, Inbox, Users } from "./icons";
+import { BookOpen, FileUp, HeartHandshake, Inbox, Users } from "./icons";
 
 const navItems = [
   { href: "/", label: "Today", icon: Inbox },
   { href: "/people", label: "People", icon: Users },
   { href: "/onboarding", label: "Import", icon: FileUp },
+  { href: "/api-docs", label: "API", icon: BookOpen },
 ];
 
 export function AppShell({ children }: { children: ReactNode }) {

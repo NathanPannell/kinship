@@ -17,6 +17,19 @@ export const contactSchema = z.object({
   notes: z.string().trim().max(10000).optional().nullable().transform((v) => v || null),
 });
 export const contactPatchSchema = contactSchema.partial();
+const bulkContactIds = z.array(z.uuid()).min(1).max(10000).refine(
+  (ids) => new Set(ids).size === ids.length,
+  "Contact IDs must be unique",
+);
+export const bulkContactUpdateSchema = z.strictObject({
+  ids: bulkContactIds,
+  updates: z.strictObject({
+    priority: z.enum(["high", "normal", "low"]).optional(),
+    cadence_days: z.number().int().min(1).max(3650).optional(),
+  }).refine((updates) => updates.priority !== undefined || updates.cadence_days !== undefined, "Provide a priority or cadence"),
+});
+export const bulkContactDeleteSchema = z.strictObject({ ids: bulkContactIds });
+export const deleteAllContactsSchema = z.strictObject({ confirmation: z.literal("DELETE_ALL_CONTACTS") });
 export const interactionSchema = z.object({
   contact_id: z.uuid(),
   channel: z.enum(["LinkedIn", "WhatsApp", "Email", "Phone", "In person", "Other"]),

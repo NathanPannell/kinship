@@ -42,6 +42,7 @@ yarn-error.log*
 next-env.d.ts
 .codex/preview.mjs
 .codex/set-vercel-env.mjs
+.codex/private-data/
 
 .vercel
 .env*.local
