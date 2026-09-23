@@ -2,11 +2,13 @@ import { z } from "zod";
 
 const optionalText = z.string().trim().max(2000).optional().nullable().transform((v) => v || null);
 const optionalUrl = z.union([z.url().max(2000), z.literal(""), z.null()]).optional().transform((v) => v || null);
+const optionalHttpsUrl = optionalUrl.refine((v) => !v || v.startsWith("https://"), "Photo URLs must use HTTPS");
 export const contactSchema = z.object({
   name: z.string().trim().min(1).max(200),
   company: optionalText,
   role: optionalText,
   linkedin_url: optionalUrl,
+  photo_url: optionalHttpsUrl,
   email: z.union([z.email(), z.literal(""), z.null()]).optional().transform((v) => v || null),
   phone: optionalText,
   location: optionalText,

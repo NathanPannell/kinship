@@ -76,6 +76,10 @@ export function PersonForm({ initial, onSubmit, onCancel, submitLabel = "Save pe
         <span className="field-label">LinkedIn URL</span>
         <input className="input" type="url" value={values.linkedin_url} onChange={(event) => update("linkedin_url", event.target.value)} placeholder="https://linkedin.com/in/..." />
       </label>
+      <label className="form-field form-field-full">
+        <span className="field-label">Photo URL</span>
+        <input className="input" type="url" value={values.photo_url} onChange={(event) => update("photo_url", event.target.value)} placeholder="https://..." />
+      </label>
       <label className="form-field">
         <span className="field-label">Location</span>
         <input className="input" value={values.location} onChange={(event) => update("location", event.target.value)} placeholder="City or region" />

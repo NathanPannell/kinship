@@ -2,8 +2,9 @@
 
 import Link from "next/link";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { apiRequest, formatDate, initials, priorityClass, relativeContactDate } from "./crm-utils";
+import { apiRequest, formatDate, priorityClass, relativeContactDate } from "./crm-utils";
 import type { Suggestion } from "./crm-types";
+import { PersonAvatar } from "./person-avatar";
 import { ArrowUpRight, CalendarDays, Check, Clock3, Link2, Mail, MessageCircle, Plus, RefreshCw, Sparkles } from "./icons";
 import { InteractionForm } from "./interaction-form";
 
@@ -55,7 +56,7 @@ function SuggestionCard({ suggestion, onRefresh }: { suggestion: Suggestion; onR
     <article className="suggestion-card">
       <div className="suggestion-main">
         <div className="person-heading">
-          <span className="person-avatar" aria-hidden="true">{initials(suggestion.name)}</span>
+          <PersonAvatar className="person-avatar" name={suggestion.name} photoUrl={suggestion.photo_url} />
           <div className="person-heading-copy">
             <Link className="person-name" href={`/people/${suggestion.id}`}>{suggestion.name}</Link>
             <div className="person-role">{roleLine}</div>
@@ -153,7 +154,7 @@ export function TodayScreen() {
         {loading ? <div className="loading-state"><div><RefreshCw size={20} className="spin" aria-hidden="true" /><strong>Finding your next conversations...</strong><p>Checking cadence, priority, and your recent notes.</p></div></div> : error ? <div className="error-state"><div><RefreshCw size={20} aria-hidden="true" /><strong>Could not load your suggestions</strong><p>{error}</p><button className="button button-secondary" type="button" onClick={() => { setLoading(true); void load(); }}>Try again</button></div></div> : suggestions.length === 0 ? <div className="empty-state"><div><Sparkles size={21} aria-hidden="true" /><strong>Your daily list is clear.</strong><p>Add a few people or import your LinkedIn connections to start building your circle.</p><Link className="button button-primary" href="/people" style={{ marginTop: 14 }}>Go to People</Link></div></div> : <div className="suggestion-list">{suggestions.map((suggestion) => <SuggestionCard key={suggestion.id} suggestion={suggestion} onRefresh={load} />)}</div>}
       </section>
 
-      {!loading && !error && upcoming.length > 0 ? <section className="section-block" aria-labelledby="upcoming-heading"><div className="section-heading"><h2 id="upcoming-heading">Coming up soon</h2><p>People approaching their cadence</p></div><div className="upcoming-list">{upcoming.slice(0, 5).map((person) => <Link className="upcoming-row" href={`/people/${person.id}`} key={person.id}><span className="upcoming-person"><span className="person-avatar" aria-hidden="true">{initials(person.name)}</span><span className="upcoming-detail"><strong>{person.name}</strong><span>{[person.role, person.company].filter(Boolean).join(" at ") || "Professional connection"}</span></span></span><span className="upcoming-date"><CalendarDays size={13} aria-hidden="true" /> {formatDate(person.next_recommended_at)}</span></Link>)}</div></section> : null}
+      {!loading && !error && upcoming.length > 0 ? <section className="section-block" aria-labelledby="upcoming-heading"><div className="section-heading"><h2 id="upcoming-heading">Coming up soon</h2><p>People approaching their cadence</p></div><div className="upcoming-list">{upcoming.slice(0, 5).map((person) => <Link className="upcoming-row" href={`/people/${person.id}`} key={person.id}><span className="upcoming-person"><PersonAvatar className="person-avatar" name={person.name} photoUrl={person.photo_url} /><span className="upcoming-detail"><strong>{person.name}</strong><span>{[person.role, person.company].filter(Boolean).join(" at ") || "Professional connection"}</span></span></span><span className="upcoming-date"><CalendarDays size={13} aria-hidden="true" /> {formatDate(person.next_recommended_at)}</span></Link>)}</div></section> : null}
     </>
   );
 }

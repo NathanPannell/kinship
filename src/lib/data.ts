@@ -8,6 +8,11 @@ export async function allContacts(): Promise<Contact[]> {
   return query<Contact>("SELECT * FROM contacts ORDER BY name ASC");
 }
 
+export async function hasContacts(): Promise<boolean> {
+  const [result] = await query<{ has_contacts: boolean }>("SELECT EXISTS (SELECT 1 FROM contacts) AS has_contacts");
+  return Boolean(result?.has_contacts);
+}
+
 export async function contactById(id: string): Promise<Contact | null> {
   return (await query<Contact>("SELECT * FROM contacts WHERE id = $1", [id]))[0] ?? null;
 }
@@ -46,9 +51,9 @@ export async function listContacts(options: { search?: string; priority?: string
 export async function createContact(input: z.infer<typeof contactSchema>): Promise<Contact> {
   const data = contactSchema.parse(input);
   const [contact] = await query<Contact>(
-    `INSERT INTO contacts (name, company, role, linkedin_url, email, phone, location, priority, cadence_days, notes)
-     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10) RETURNING *`,
-    [data.name, data.company, data.role, data.linkedin_url, data.email, data.phone, data.location, data.priority, data.cadence_days, data.notes],
+    `INSERT INTO contacts (name, company, role, linkedin_url, photo_url, email, phone, location, priority, cadence_days, notes)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11) RETURNING *`,
+    [data.name, data.company, data.role, data.linkedin_url, data.photo_url, data.email, data.phone, data.location, data.priority, data.cadence_days, data.notes],
   );
   return contact;
 }
@@ -59,15 +64,15 @@ export async function updateContact(id: string, input: z.infer<typeof contactPat
   if (!existing) return null;
   const merged = { ...existing, ...data };
   const [contact] = await query<Contact>(
-    `UPDATE contacts SET name=$2, company=$3, role=$4, linkedin_url=$5, email=$6, phone=$7, location=$8,
-      priority=$9, cadence_days=$10, notes=$11, updated_at=now() WHERE id=$1 RETURNING *`,
-    [id, merged.name, merged.company, merged.role, merged.linkedin_url, merged.email, merged.phone, merged.location, merged.priority, merged.cadence_days, merged.notes],
+    `UPDATE contacts SET name=$2, company=$3, role=$4, linkedin_url=$5, photo_url=$6, email=$7, phone=$8, location=$9,
+      priority=$10, cadence_days=$11, notes=$12, updated_at=now() WHERE id=$1 RETURNING *`,
+    [id, merged.name, merged.company, merged.role, merged.linkedin_url, merged.photo_url, merged.email, merged.phone, merged.location, merged.priority, merged.cadence_days, merged.notes],
   );
   return contact ?? null;
 }
 
 async function refreshLastContacted(contactId: string) {
-  await query("UPDATE contacts SET last_contacted_at=(SELECT MAX(occurred_at) FROM interactions WHERE contact_id=$1), updated_at=now() WHERE id=$1", [contactId]);
+  await query("UPDATE contacts SET last_contacted_at=GREATEST(imported_last_contacted_at,(SELECT MAX(occurred_at) FROM interactions WHERE contact_id=$1)), updated_at=now() WHERE id=$1", [contactId]);
 }
 
 export async function createInteraction(input: z.infer<typeof interactionSchema>): Promise<Interaction> {

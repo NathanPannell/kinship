@@ -193,12 +193,20 @@ textarea:focus-visible {
 .person-avatar-large {
   display: grid;
   flex: 0 0 auto;
+  overflow: hidden;
   place-items: center;
   border-radius: 50%;
   background: var(--color-accent-soft);
   color: var(--color-accent-deep);
   font-weight: 700;
   letter-spacing: -0.03em;
+}
+
+.person-avatar-image {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
 }
 
 .user-avatar {

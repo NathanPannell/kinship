@@ -7,6 +7,7 @@ export type Contact = {
   company: string | null;
   role: string | null;
   linkedin_url: string | null;
+  photo_url?: string | null;
   email: string | null;
   phone: string | null;
   location: string | null;
@@ -14,6 +15,7 @@ export type Contact = {
   cadence_days: number;
   notes: string | null;
   last_contacted_at: string | null;
+  imported_last_contacted_at?: string | null;
   snoozed_until: string | null;
   created_at: string;
   updated_at: string;
