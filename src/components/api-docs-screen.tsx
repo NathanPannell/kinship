@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { ArrowUpRight, Check, ChevronRight, Copy, Eye, EyeOff, Play, ShieldCheck } from "lucide-react";
 import styles from "./api-docs-screen.module.css";
 
-type EndpointId = "suggestions" | "contacts" | "contact" | "update" | "interaction";
+type EndpointId = "suggestions" | "contacts" | "create" | "contact" | "update" | "interaction";
 type Endpoint = { id: EndpointId; method: "GET" | "PATCH" | "POST"; path: string; title: string; description: string; response: string; writes?: boolean };
 type Result = { status: number; statusText: string; body: string; url: string };
 type TokenRecord = { id: string; name: string; token_prefix: string; created_at: string; revoked_at: string | null };
@@ -12,12 +12,14 @@ type TokenRecord = { id: string; name: string; token_prefix: string; created_at:
 const endpoints: Endpoint[] = [
   { id: "suggestions", method: "GET", path: "/api/agent/suggestions", title: "Today’s suggestions", description: "Up to three contacts due today, plus upcoming contacts.", response: "200 · suggestions and upcoming arrays" },
   { id: "contacts", method: "GET", path: "/api/agent/contacts", title: "Search contacts", description: "Find contacts by name, company, or role and narrow by priority.", response: "200 · contacts array" },
+  { id: "create", method: "POST", path: "/api/agent/contacts", title: "Create a contact", description: "Create a contact. Only the name is required, and names may be shared. Priority defaults to low and the follow-up cadence defaults to 60 days.", response: "201 · created contact", writes: true },
   { id: "contact", method: "GET", path: "/api/agent/contacts/{id}", title: "Contact details", description: "Get one contact and its 20 most recent interactions.", response: "200 · contact and interactions" },
   { id: "update", method: "PATCH", path: "/api/agent/contacts/{id}", title: "Update a contact", description: "Change contact details or follow-up preferences.", response: "200 · updated contact", writes: true },
   { id: "interaction", method: "POST", path: "/api/agent/interactions", title: "Record an interaction", description: "Log a touchpoint and recalculate the contact’s last contact date.", response: "201 · created interaction", writes: true },
 ];
 
 const exampleUpdate = JSON.stringify({ priority: "high", cadence_days: 14 }, null, 2);
+const exampleCreate = JSON.stringify({ name: "Ada Lovelace" }, null, 2);
 const exampleInteraction = JSON.stringify({ contact_id: "", channel: "Email", note: "Followed up about the project." }, null, 2);
 const uuidPattern = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
@@ -112,6 +114,7 @@ export function ApiDocsScreen() {
     setActiveId(id);
     setResult(null);
     setError("");
+    if (id === "create") setRequestBody(exampleCreate);
     if (id === "update") setRequestBody(exampleUpdate);
     if (id === "interaction") setRequestBody(exampleInteraction);
   }
@@ -178,7 +181,7 @@ export function ApiDocsScreen() {
 
   async function copyAgentSetup() {
     const base = window.location.origin;
-    const instructions = `Use my Kinship CRM agent API at ${base}. Read the public OpenAPI 3.1 specification at ${base}/openapi.json for paths, parameters, and schemas. I will provide a named API token separately. Send it as Authorization: Bearer <token> on every /api/agent/* request. Start with GET /api/agent/suggestions to find who needs attention; use GET /api/agent/contacts to search, GET /api/agent/contacts/{id} for details, PATCH /api/agent/contacts/{id} to update a contact, and POST /api/agent/interactions to record a touchpoint. Ask me before making changes or contacting anyone. This API does not send messages.`;
+    const instructions = `Use my Kinship CRM agent API at ${base}. Read the public OpenAPI 3.1 specification at ${base}/openapi.json for paths, parameters, and schemas. I will provide a named API token separately. Send it as Authorization: Bearer <token> on every /api/agent/* request. Start with GET /api/agent/suggestions to find who needs attention; use GET /api/agent/contacts to search, POST /api/agent/contacts to create a contact, GET /api/agent/contacts/{id} for details, PATCH /api/agent/contacts/{id} to update a contact, and POST /api/agent/interactions to record a touchpoint. Ask me before making changes or contacting anyone. This API does not send messages.`;
     try {
       await navigator.clipboard.writeText(instructions);
       setSetupCopied(true);
@@ -251,9 +254,10 @@ export function ApiDocsScreen() {
             </div>}
             {needsId && <label className={styles.field}>Contact ID <input className="input" value={contactId} onChange={(event) => setContactId(event.target.value)} placeholder="Contact UUID" spellCheck={false} /></label>}
             {needsBody && <label className={styles.field}>JSON body <textarea className={`${styles.bodyInput} textarea`} value={requestBody} onChange={(event) => setRequestBody(event.target.value)} spellCheck={false} rows={activeId === "interaction" ? 6 : 5} /></label>}
+            {activeId === "create" && <p className={styles.fieldHint}>Only <code>name</code> is required. All other fields are optional. If omitted, priority defaults to low and <code>cadence_days</code> defaults to 60.</p>}
             {activeId === "interaction" && <p className={styles.fieldHint}>Replace the empty <code>contact_id</code> with a UUID from Search contacts.</p>}
-            {active.writes && <p className={styles.writeNotice}>{activeId === "update" ? "This request saves changes to the selected contact." : "This request creates an interaction and updates the contact’s last contact date."}</p>}
-            <div className={styles.requestFoot}><code>{active.method} {requestPath()}</code><button type="button" className="button button-primary" disabled={loading} onClick={runRequest}><Play size={14} fill="currentColor" aria-hidden="true" />{loading ? "Sending…" : active.writes ? "Send change" : "Send request"}</button></div>
+            {active.writes && <p className={styles.writeNotice}>{activeId === "update" ? "This request saves changes to the selected contact." : activeId === "create" ? "This request adds a contact to your CRM." : "This request creates an interaction and updates the contact’s last contact date."}</p>}
+            <div className={styles.requestFoot}><code>{active.method} {requestPath()}</code><button type="button" className="button button-primary" disabled={loading} onClick={runRequest}><Play size={14} fill="currentColor" aria-hidden="true" />{loading ? "Sending…" : activeId === "create" ? "Create contact" : active.writes ? "Send change" : "Send request"}</button></div>
             {error && <p className={styles.error} role="alert">{error}</p>}
           </section>
 

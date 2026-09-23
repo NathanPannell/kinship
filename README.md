@@ -72,6 +72,7 @@ Open **API**, enter a name, and select **Create token**. Copy the token when it 
 
 - `GET /api/agent/suggestions` for today's contacts and upcoming contacts
 - `GET /api/agent/contacts?search=...` for search and filters
+- `POST /api/agent/contacts` to create a contact with only `name` required; names may repeat, and omitted priority and cadence default to `low` and `60` days
 - `GET /api/agent/contacts/{id}` for a profile and recent interactions
 - `PATCH /api/agent/contacts/{id}` to update a profile or its follow-up settings
 - `POST /api/agent/interactions` with `contact_id`, `channel`, `note`, and optional ISO `occurred_at`

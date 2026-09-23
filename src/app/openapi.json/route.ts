@@ -3,11 +3,21 @@ import { NextResponse } from "next/server";
 const contact = { type: "object", properties: {
   id: { type: "string", format: "uuid" }, name: { type: "string" }, company: { type: ["string", "null"] }, role: { type: ["string", "null"] },
   linkedin_url: { type: ["string", "null"] }, photo_url: { type: ["string", "null"], format: "uri" }, email: { type: ["string", "null"], format: "email" },
-  phone: { type: ["string", "null"] }, location: { type: ["string", "null"] }, priority: { type: "string", enum: ["high", "normal", "low"] }, cadence_days: { type: "integer" },
+  phone: { type: ["string", "null"] }, location: { type: ["string", "null"] }, notes: { type: ["string", "null"] }, priority: { type: "string", enum: ["high", "normal", "low"] }, cadence_days: { type: "integer" },
   last_contacted_at: { type: ["string", "null"], format: "date-time" },
 } };
 const interaction = { type: "object", properties: { id: { type: "string", format: "uuid" }, contact_id: { type: "string", format: "uuid" },
   channel: { type: "string", enum: ["LinkedIn", "WhatsApp", "Email", "Phone", "In person", "Other"] }, note: { type: "string" }, occurred_at: { type: "string", format: "date-time" } } };
+const createContactRequest = { type: "object", required: ["name"], properties: {
+  name: { type: "string", minLength: 1, maxLength: 200, pattern: "\\S", description: "Trimmed nonblank name. Names do not need to be unique." },
+  company: { type: ["string", "null"], maxLength: 2000 }, role: { type: ["string", "null"], maxLength: 2000 },
+  linkedin_url: { type: ["string", "null"], format: "uri", maxLength: 2000 },
+  photo_url: { type: ["string", "null"], format: "uri", pattern: "^https://", maxLength: 2000 },
+  email: contact.properties.email, phone: { type: ["string", "null"], maxLength: 2000 },
+  location: { type: ["string", "null"], maxLength: 2000 }, notes: { type: ["string", "null"], maxLength: 10000 },
+  priority: { ...contact.properties.priority, default: "low" },
+  cadence_days: { type: "integer", minimum: 1, maximum: 3650, default: 60 },
+} };
 const unauthorized = { description: "Missing or invalid bearer token" };
 const json = (schema: object) => ({ "application/json": { schema } });
 const get = (summary: string, schema: object, parameters?: object[]) => ({ summary, security: [{ bearerAuth: [] }], parameters, responses: { "200": { description: "Success", content: json(schema) }, "401": unauthorized } });
@@ -22,7 +32,16 @@ export async function GET(request: Request) {
       "/api/agent/contacts": { get: get("Search contacts", { type: "object", properties: { contacts: { type: "array", items: contact } } }, [
         { in: "query", name: "search", schema: { type: "string" } }, { in: "query", name: "priority", schema: { type: "string", enum: ["high", "normal", "low"] } },
         { in: "query", name: "overdue", schema: { type: "boolean" } }, { in: "query", name: "sort", schema: { type: "string", enum: ["last_contacted", "next_due"] } },
-      ]) },
+      ]), post: {
+        summary: "Create a contact",
+        description: "Only the name is required. Duplicate names are allowed. Omitted priority defaults to low and omitted cadence_days defaults to 60.",
+        security: [{ bearerAuth: [] }],
+        requestBody: { required: true, content: json(createContactRequest) },
+        responses: {
+          "201": { description: "Created", headers: { Location: { description: "Path of the new contact", schema: { type: "string" } } }, content: json({ type: "object", properties: { contact } }) },
+          "400": { description: "Invalid input" }, "401": unauthorized, "409": { description: "LinkedIn URL is already attached to another contact" },
+        },
+      } },
       "/api/agent/contacts/{id}": {
         get: get("Get one contact and recent interaction history", { type: "object", properties: { contact, interactions: { type: "array", items: interaction } } }, [{ in: "path", name: "id", required: true, schema: { type: "string", format: "uuid" } }]),
         patch: {

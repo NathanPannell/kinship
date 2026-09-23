@@ -16,6 +16,10 @@ export const contactSchema = z.object({
   cadence_days: z.coerce.number().int().min(1).max(3650).default(45),
   notes: z.string().trim().max(10000).optional().nullable().transform((v) => v || null),
 });
+export const agentContactCreateSchema = contactSchema.extend({
+  priority: z.enum(["high", "normal", "low"]).default("low"),
+  cadence_days: z.coerce.number().int().min(1).max(3650).default(60),
+});
 export const contactPatchSchema = contactSchema.partial();
 const bulkContactIds = z.array(z.uuid()).min(1).max(10000).refine(
   (ids) => new Set(ids).size === ids.length,
