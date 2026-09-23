@@ -9,7 +9,7 @@ export default async function SettingsPage() {
     <p className="mt-2 text-sm text-[#607167]">Manage your Kinship account and data.</p>
     <section className="mt-8 rounded-xl border border-[#dfe5dc] bg-white p-6">
       <h2 className="text-lg font-semibold">Your data</h2>
-      <p className="mt-2 text-sm text-[#607167]">Deleting your account permanently removes your contacts, interactions, uploaded photos, and API tokens.</p>
+      <p className="mt-2 text-sm text-[#607167]">Deleting your account removes your contacts, interactions, uploaded photos, and API tokens from Kinship&apos;s active database. Provider backups may retain copies until they expire.</p>
       <DeleteAccount />
     </section>
   </div></AppShell>;

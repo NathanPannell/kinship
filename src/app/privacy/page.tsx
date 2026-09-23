@@ -35,7 +35,7 @@ export default function PrivacyPage() {
     </section>
 
     <section><h2>Retention and deletion</h2>
-      <p>Kinship keeps your account data until you delete it or your account. Revoked API tokens remain as audit metadata but cannot be used. See <Link href="/data-deletion">Data deletion</Link> for the controls and what deletion covers.</p>
+      <p>Kinship keeps your account data until you delete it or your account. Deletion removes records from the active app database; copies may remain in service-provider backups or operational logs until their retention periods expire. Revoked API tokens remain as audit metadata but cannot be used. See <Link href="/data-deletion">Data deletion</Link> for the controls and what deletion covers.</p>
     </section>
 
     <section><h2>Your choices</h2>
