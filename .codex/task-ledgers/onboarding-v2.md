@@ -23,7 +23,7 @@ Build and ship a browser-only LinkedIn CSV onboarding flow that imports selected
 - [x] Local lint, typecheck, focused tests, integration tests, and production build
 - [x] Manual UI detector
 - [x] Local desktop and mobile browser journey
-- [ ] Preview deployment and deployed browser journey
+- [x] Preview deployment and deployed browser journey
 - [ ] Merge and production deployment
 - [ ] Production smoke test
 - [ ] Close browser tabs and report URLs/revision/limitations
