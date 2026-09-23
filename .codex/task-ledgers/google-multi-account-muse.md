@@ -7,3 +7,6 @@
 - Local checks: 61 unit tests pass (3 DB integration skipped), TypeScript and production build pass; independent security review identified issues addressed in auth claim
 - Production Vercel env set: LEGACY_OWNER_EMAIL and GOOGLE_REDIRECT_URI; Google client credentials still pending Cloud consent setup
 - Isolated Neon schema-only branch br-green-cake-akxjzvuy: migrations 001-006 applied; 11 integration/boundary tests passed; branch deleted and GET returned 404
+- Draft PR: https://github.com/NathanPannell/networking-crm/pull/7, with public UI before/after captures in the PR thread
+- Pending browser-use confirmations: accept Google API Services User Data Policy, verify domain ownership in Search Console, create OAuth client
+- Production cutover remains pending those Google steps and deployment verification
