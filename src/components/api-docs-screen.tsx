@@ -268,8 +268,9 @@ export function ApiDocsScreen() {
 
           <section className={styles.reference} aria-labelledby="reference-title">
             <h2 id="reference-title">Use it outside Kinship</h2>
-            <p>Give your agent the token, your Kinship base URL, and the public <code>/openapi.json</code> URL. The machine readable specification describes each path, parameter, request body, and response. Send <code>Authorization: Bearer &lt;token&gt;</code> with every agent API request. The specification is public, so your agent can read it before it has a token.</p>
-            <div className={styles.referenceActions}><a href="/openapi.json" target="_blank" rel="noreferrer">View OpenAPI specification <ArrowUpRight size={15} aria-hidden="true" /></a><button type="button" onClick={copySpecUrl}>{copied ? <Check size={15} /> : <Copy size={15} />}{copied ? "Copied" : "Copy spec URL"}</button><button type="button" onClick={copyAgentSetup}>{setupCopied ? <Check size={15} /> : <Copy size={15} />}{setupCopied ? "Copied" : "Copy agent setup"}</button></div>
+            <p>Give your agent the token, your Kinship base URL, and the public <code>/openapi.json</code> URL. The machine readable specification describes each path, parameter, request body, and response. Send <code>Authorization: Bearer &lt;token&gt;</code> with every agent API request. The token can access only this Kinship account, and you can revoke it above.</p>
+            <p>For Meta Muse, create a token named for Muse and ask Muse to build a custom connector from the OpenAPI URL. Store the token as a bearer credential in Muse, then test with <code>GET /api/agent/suggestions</code>. Review write requests before allowing them.</p>
+            <div className={styles.referenceActions}><a href="/openapi.json" target="_blank" rel="noreferrer">View OpenAPI specification <ArrowUpRight size={15} aria-hidden="true" /></a><a href="/connect/muse">Muse setup guide <ArrowUpRight size={15} aria-hidden="true" /></a><button type="button" onClick={copySpecUrl}>{copied ? <Check size={15} /> : <Copy size={15} />}{copied ? "Copied" : "Copy spec URL"}</button><button type="button" onClick={copyAgentSetup}>{setupCopied ? <Check size={15} /> : <Copy size={15} />}{setupCopied ? "Copied" : "Copy agent setup"}</button></div>
           </section>
         </div>
       </div>

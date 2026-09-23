@@ -1,13 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireApiSession } from "@/lib/auth";
+import { getApiUserId } from "@/lib/auth";
 import { commitOnboarding } from "@/lib/onboarding";
 import { failure } from "@/lib/http";
 
 const maxRequestBytes = 4 * 1024 * 1024;
 
 export async function POST(request: NextRequest) {
-  const denied = await requireApiSession(request);
-  if (denied) return denied;
+  const userId = await getApiUserId(request);
+  if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
 
   const contentLength = Number(request.headers.get("content-length") ?? 0);
   if (contentLength > maxRequestBytes) {
@@ -25,7 +25,7 @@ export async function POST(request: NextRequest) {
     } catch {
       return NextResponse.json({ error: "Invalid JSON" }, { status: 400 });
     }
-    return NextResponse.json(await commitOnboarding(body));
+    return NextResponse.json(await commitOnboarding(userId, body));
   } catch (error) {
     return failure(error);
   }
