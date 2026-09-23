@@ -14,7 +14,7 @@ const get = (summary: string, schema: object, parameters?: object[]) => ({ summa
 
 export async function GET(request: Request) {
   const spec = {
-    openapi: "3.1.0", info: { title: "Networking CRM agent API", version: "1.0.0", description: "Personal relationship state. Pass the AGENT_API_TOKEN as a Bearer token. The API never sends messages." },
+    openapi: "3.1.0", info: { title: "Kinship agent API", version: "1.0.0", description: "Personal relationship state. Create a named token on the API page and pass it as an Authorization: Bearer header. This specification is public; data endpoints require a token. The API never sends messages." },
     servers: [{ url: new URL(request.url).origin }],
     components: { securitySchemes: { bearerAuth: { type: "http", scheme: "bearer", bearerFormat: "opaque" } }, schemas: { Contact: contact, Interaction: interaction } },
     paths: {

@@ -20,10 +20,10 @@ Copy `.env.example` to `.env.local` for local development. Do not commit real va
 | `GITHUB_CLIENT_ID`, `GITHUB_CLIENT_SECRET` | GitHub OAuth app credentials |
 | `ALLOWED_GITHUB_ID` | Numeric GitHub user ID allowed to sign in, recommended |
 | `ALLOWED_GITHUB_LOGIN` | Optional login-name allowlist fallback |
-| `AGENT_API_TOKEN` | Random bearer token of at least 32 characters |
+| `AGENT_API_TOKEN` | Optional legacy bearer token of at least 32 characters |
 | `APP_REVISION` | Optional deployed Git commit SHA shown by `/api/ready` |
 
-Configure at least one sign-in method: `APP_PASSWORD` or GitHub OAuth. The agent token is independent of browser sign-in.
+Configure at least one sign-in method: `APP_PASSWORD` or GitHub OAuth. Sign in to create named agent tokens on the API page. `AGENT_API_TOKEN` remains available for existing integrations.
 
 ## Local setup
 
@@ -68,7 +68,7 @@ Export your official Connections and messages CSV files from LinkedIn, then open
 
 ## Agent API
 
-Send `Authorization: Bearer <AGENT_API_TOKEN>` to:
+Open **API**, enter a name, and select **Create token**. Copy the token when it appears; only its hash is stored and the secret is not shown again. The same page lists tokens and lets you revoke them immediately. Send `Authorization: Bearer <token>` to:
 
 - `GET /api/agent/suggestions` for today's contacts and upcoming contacts
 - `GET /api/agent/contacts?search=...` for search and filters
@@ -76,4 +76,4 @@ Send `Authorization: Bearer <AGENT_API_TOKEN>` to:
 - `PATCH /api/agent/contacts/{id}` to update a profile or its follow-up settings
 - `POST /api/agent/interactions` with `contact_id`, `channel`, `note`, and optional ISO `occurred_at`
 
-The interactive API documentation and playground are at `/api-docs`; the machine-readable OpenAPI 3.1 document is at `/openapi.json`. The agent API cannot delete contacts or send messages.
+The interactive API documentation and playground are at `/api-docs`; the public machine-readable OpenAPI 3.1 document is at `/openapi.json`. Give your agent the app base URL, the OpenAPI URL, and a token. The API page has a **Copy agent setup** action for the endpoint instructions. The agent API cannot delete contacts or send messages.

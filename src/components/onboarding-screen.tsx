@@ -111,6 +111,7 @@ function ChoiceGroup<T extends string | number>({
   selected,
   onChange,
   group,
+  disabled,
 }: {
   label: string;
   name: string;
@@ -118,9 +119,10 @@ function ChoiceGroup<T extends string | number>({
   selected: T | null;
   onChange: (value: T) => void;
   group: "priority" | "cadence";
+  disabled: boolean;
 }) {
   return (
-    <fieldset className={styles.bulkGroup}>
+    <fieldset className={styles.bulkGroup} disabled={disabled}>
       <legend>{label}</legend>
       <div className={`${styles.choiceRow} ${group === "cadence" ? styles.cadenceChoices : ""}`}>
         {options.map((option) => (
@@ -151,11 +153,13 @@ function SliderSetting({
   kind,
   value,
   onChange,
+  compact = false,
 }: {
   contact: OnboardingContact;
   kind: "priority" | "cadence";
   value: number;
   onChange: (value: number) => void;
+  compact?: boolean;
 }) {
   const isPriority = kind === "priority";
   const options = isPriority ? priorityOptions : cadenceOptions;
@@ -170,7 +174,7 @@ function SliderSetting({
     : "linear-gradient(90deg, #d6e8f5 0%, #a8c8e1 34%, #638eb5 67%, #294c72 100%)";
 
   return (
-    <div className={styles.sliderSetting}>
+    <div className={`${styles.sliderSetting} ${compact ? styles.sliderSettingCompact : ""}`}>
       <div className={styles.sliderTitle}>
         <label htmlFor={`${kind}-${contact.id}`}>{isPriority ? "Priority" : "How often"}</label>
         <span className={isPriority ? styles[`priorityText_${selected.value}`] : styles[`cadenceText_${selected.value}`]}>
@@ -190,13 +194,15 @@ function SliderSetting({
         style={{ "--range-color": color, "--range-track": fill, "--range-progress": progress } as CSSProperties}
         onChange={(event) => onChange(Number(event.target.value))}
       />
-      <div className={`${styles.rangeTicks} ${isPriority ? styles.priorityTicks : styles.cadenceTicks}`} aria-hidden="true">
-        {options.map((option) => (
-          <span key={option.value} data-tone={"tone" in option ? option.tone : undefined} data-cadence={isPriority ? undefined : String(option.value)}>
-            {option.label}
-          </span>
-        ))}
-      </div>
+      {!compact ? (
+        <div className={`${styles.rangeTicks} ${isPriority ? styles.priorityTicks : styles.cadenceTicks}`} aria-hidden="true">
+          {options.map((option) => (
+            <span key={option.value} data-tone={"tone" in option ? option.tone : undefined} data-cadence={isPriority ? undefined : String(option.value)}>
+              {option.label}
+            </span>
+          ))}
+        </div>
+      ) : null}
     </div>
   );
 }
@@ -216,6 +222,7 @@ export function OnboardingScreen() {
   const [step, setStep] = useState<Step>("connections");
   const [contacts, setContacts] = useState<OnboardingContact[]>([]);
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [bulkTargetIds, setBulkTargetIds] = useState<Set<string>>(new Set());
   const [connectionFileName, setConnectionFileName] = useState("");
   const [messageFileName, setMessageFileName] = useState("");
   const [messageCount, setMessageCount] = useState(0);
@@ -230,6 +237,10 @@ export function OnboardingScreen() {
     [contacts, selectedIds],
   );
   const selectedPeopleLabel = `${selectedContacts.length} ${selectedContacts.length === 1 ? "person" : "people"}`;
+  const bulkTargetContacts = useMemo(
+    () => selectedContacts.filter((contact) => bulkTargetIds.has(contact.id)),
+    [selectedContacts, bulkTargetIds],
+  );
   const filteredContacts = useMemo(() => {
     const normalizedQuery = query.trim().toLocaleLowerCase();
     if (!normalizedQuery) return contacts;
@@ -242,11 +253,11 @@ export function OnboardingScreen() {
     );
   }, [contacts, query]);
 
-  const allPriority = selectedContacts.length > 0 && selectedContacts.every((contact) => contact.priority === selectedContacts[0].priority)
-    ? selectedContacts[0].priority
+  const allPriority = bulkTargetContacts.length > 0 && bulkTargetContacts.every((contact) => contact.priority === bulkTargetContacts[0].priority)
+    ? bulkTargetContacts[0].priority
     : null;
-  const allCadence = selectedContacts.length > 0 && selectedContacts.every((contact) => contact.cadence_days === selectedContacts[0].cadence_days)
-    ? selectedContacts[0].cadence_days
+  const allCadence = bulkTargetContacts.length > 0 && bulkTargetContacts.every((contact) => contact.cadence_days === bulkTargetContacts[0].cadence_days)
+    ? bulkTargetContacts[0].cadence_days
     : null;
 
   const handleConnectionsFile = async (file: File | undefined) => {
@@ -303,7 +314,7 @@ export function OnboardingScreen() {
   };
 
   const updateSelectedContacts = (change: Partial<Pick<OnboardingContact, "priority" | "cadence_days">>) => {
-    setContacts((current) => current.map((contact) => selectedIds.has(contact.id) ? { ...contact, ...change } : contact));
+    setContacts((current) => current.map((contact) => bulkTargetIds.has(contact.id) ? { ...contact, ...change } : contact));
   };
 
   const toggleContact = (id: string) => {
@@ -314,6 +325,23 @@ export function OnboardingScreen() {
       return next;
     });
   };
+
+  const toggleBulkTarget = (id: string) => {
+    setBulkTargetIds((current) => {
+      const next = new Set(current);
+      if (next.has(id)) next.delete(id);
+      else next.add(id);
+      return next;
+    });
+  };
+
+  const openSettings = () => {
+    setBulkTargetIds(new Set(selectedIds));
+    setStep("settings");
+  };
+
+  const selectAllBulkTargets = () => setBulkTargetIds(new Set(selectedIds));
+  const clearBulkTargets = () => setBulkTargetIds(new Set());
 
   const commitOnboarding = async () => {
     if (selectedContacts.length === 0) return;
@@ -500,7 +528,7 @@ export function OnboardingScreen() {
             <button className="button button-quiet" type="button" onClick={() => setStep("messages")}>
               <ArrowLeft size={15} aria-hidden="true" />Back
             </button>
-            <button className="button button-primary" type="button" onClick={() => setStep("settings")} disabled={selectedContacts.length === 0}>
+            <button className="button button-primary" type="button" onClick={openSettings} disabled={selectedContacts.length === 0}>
               Set preferences for {selectedContacts.length} {selectedContacts.length === 1 ? "person" : "people"}
               <ArrowRight size={15} aria-hidden="true" />
             </button>
@@ -521,64 +549,93 @@ export function OnboardingScreen() {
           <div className={styles.bulkSettings}>
             <div className={styles.bulkHeading}>
               <div>
-                <h3>Apply to everyone</h3>
-                <p>Choose a starting point for all {selectedPeopleLabel}.</p>
+                <h3>Bulk update</h3>
+                <p aria-live="polite">{bulkTargetContacts.length} selected</p>
               </div>
-              <span className={styles.bulkHint}>You can adjust each person below</span>
+              <div className={styles.bulkActions}>
+                <button className={styles.textAction} type="button" onClick={selectAllBulkTargets}>Select all</button>
+                <button className={styles.textAction} type="button" onClick={clearBulkTargets}>Clear</button>
+              </div>
             </div>
             <div className={styles.bulkGroups}>
               <ChoiceGroup
-                label="Priority for all"
+                label="Priority"
                 name="bulk-priority"
                 group="priority"
                 options={priorityOptions}
                 selected={allPriority}
+                disabled={bulkTargetContacts.length === 0}
                 onChange={(priority) => updateSelectedContacts({ priority })}
               />
               <ChoiceGroup
-                label="Reminder for all"
+                label="Reminder"
                 name="bulk-cadence"
                 group="cadence"
                 options={cadenceOptions}
                 selected={allCadence}
+                disabled={bulkTargetContacts.length === 0}
                 onChange={(cadence_days) => updateSelectedContacts({ cadence_days })}
               />
             </div>
           </div>
 
           <div className={styles.settingsHeading}>
-            <h3>Fine-tune each person</h3>
-            <span>{selectedPeopleLabel}</span>
+            <h3>Set a rhythm for each person</h3>
+            <span>Checked rows receive bulk updates</span>
           </div>
-          <div className={styles.settingsList}>
-            {selectedContacts.map((contact) => (
-              <article className={styles.settingsPerson} key={contact.id}>
-                <div className={styles.settingsPersonHead}>
-                  <span className={styles.personAvatar} aria-hidden="true">{initials(contact.name)}</span>
-                  <span className={styles.personCopy}>
-                    <strong>{contact.name}</strong>
-                    <span>{[contact.role, contact.company].filter(Boolean).join(" · ") || "No role or company listed"}</span>
-                  </span>
-                  <span className={styles.settingLastContact}>
-                    {contact.last_contacted_at ? `Last in touch ${formatDate(contact.last_contacted_at)}` : "No message history"}
-                  </span>
-                </div>
-                <div className={styles.personSliders}>
-                  <SliderSetting
-                    contact={contact}
-                    kind="priority"
-                    value={priorityIndex(contact.priority)}
-                    onChange={(index) => updateContact(contact.id, { priority: priorityOptions[index].value })}
-                  />
-                  <SliderSetting
-                    contact={contact}
-                    kind="cadence"
-                    value={cadenceIndex(contact.cadence_days)}
-                    onChange={(index) => updateContact(contact.id, { cadence_days: cadenceOptions[index].value })}
-                  />
-                </div>
-              </article>
-            ))}
+          <div className={styles.settingsScroller}>
+            <table className={styles.settingsList} aria-label="Set a rhythm for selected people">
+              <thead>
+                <tr>
+                  <th scope="col">Person</th>
+                  <th scope="col">Priority</th>
+                  <th scope="col">Reminder</th>
+                  <th scope="col">Last contacted</th>
+                </tr>
+              </thead>
+              <tbody>
+                {selectedContacts.map((contact) => (
+                  <tr className={styles.settingsPerson} key={contact.id}>
+                    <th scope="row">
+                      <label className={styles.settingsIdentity}>
+                        <input
+                          type="checkbox"
+                          checked={bulkTargetIds.has(contact.id)}
+                          onChange={() => toggleBulkTarget(contact.id)}
+                          aria-label={`Select ${contact.name} for bulk updates`}
+                        />
+                        <span className={styles.personAvatar} aria-hidden="true">{initials(contact.name)}</span>
+                        <span className={styles.personCopy}>
+                          <strong>{contact.name}</strong>
+                          <span>{[contact.role, contact.company].filter(Boolean).join(" · ") || "No role or company listed"}</span>
+                        </span>
+                      </label>
+                    </th>
+                    <td>
+                      <SliderSetting
+                        contact={contact}
+                        kind="priority"
+                        value={priorityIndex(contact.priority)}
+                        onChange={(index) => updateContact(contact.id, { priority: priorityOptions[index].value })}
+                        compact
+                      />
+                    </td>
+                    <td>
+                      <SliderSetting
+                        contact={contact}
+                        kind="cadence"
+                        value={cadenceIndex(contact.cadence_days)}
+                        onChange={(index) => updateContact(contact.id, { cadence_days: cadenceOptions[index].value })}
+                        compact
+                      />
+                    </td>
+                    <td className={styles.settingLastContact}>
+                      {contact.last_contacted_at ? formatDate(contact.last_contacted_at) : "No history"}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
 
           <div className={styles.finishNote}>

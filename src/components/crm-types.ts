@@ -25,6 +25,7 @@ export type Contact = {
   role?: string | null;
   linkedin_url?: string | null;
   photo_url?: string | null;
+  uploaded_photo_updated_at?: string | null;
   email?: string | null;
   phone?: string | null;
   location?: string | null;

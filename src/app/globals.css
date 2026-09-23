@@ -695,6 +695,37 @@ textarea:focus-visible {
   font-size: 12px;
 }
 
+.field-hint {
+  color: var(--color-muted);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+.photo-upload-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+}
+
+.photo-upload-button {
+  position: relative;
+  overflow: hidden;
+}
+
+.photo-file-input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.photo-file-input:disabled {
+  cursor: default;
+}
+
 .form-error {
   grid-column: 1 / -1;
 }
@@ -956,11 +987,16 @@ textarea:focus-visible {
 }
 
 .people-bulk-panel {
-  margin: 0 0 18px;
-  padding: 17px 19px;
-  border: 1px solid var(--color-line-strong);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+  margin: 0 0 14px;
+  padding: 9px 12px;
+  border: 1px solid var(--color-line);
   border-radius: var(--radius-sm);
   background: var(--color-surface-muted);
+  transition: border-color 150ms ease;
 }
 
 .people-bulk-heading,
@@ -968,11 +1004,22 @@ textarea:focus-visible {
 .people-delete-all {
   display: flex;
   align-items: center;
-  gap: 12px;
+  gap: 8px;
 }
 
 .people-bulk-heading {
-  justify-content: space-between;
+  flex: 0 0 auto;
+}
+
+.people-bulk-panel.has-selection {
+  border-color: var(--color-line-strong);
+}
+
+.people-bulk-heading .people-bulk-count {
+  min-width: 116px;
+  color: var(--color-ink);
+  font-size: 12px;
+  white-space: nowrap;
 }
 
 .people-bulk-heading strong,
@@ -981,7 +1028,17 @@ textarea:focus-visible {
   font-size: 14px;
 }
 
-.people-bulk-panel p,
+.people-bulk-heading .text-button {
+  min-height: 32px;
+  padding: 0 4px;
+  white-space: nowrap;
+}
+
+.people-bulk-heading .text-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
 .people-delete-all p {
   margin: 4px 0 0;
   color: var(--color-muted);
@@ -990,23 +1047,64 @@ textarea:focus-visible {
 }
 
 .people-bulk-controls {
+  flex: 1 1 auto;
   flex-wrap: wrap;
-  align-items: end;
-  margin-top: 14px;
+  justify-content: flex-end;
+  min-width: 0;
 }
 
 .people-bulk-field {
-  display: grid;
+  display: flex;
+  align-items: center;
   gap: 6px;
-  min-width: 155px;
+  min-width: 0;
   color: var(--color-ink-soft);
-  font-size: 12px;
+  font-size: 11px;
   font-weight: 620;
+  white-space: nowrap;
 }
 
 .people-bulk-field .select,
 .people-bulk-field .input {
-  height: 38px;
+  height: 34px;
+  padding: 0 8px;
+}
+
+.people-bulk-field .select {
+  width: 116px;
+}
+
+.people-bulk-field .input {
+  width: 112px;
+}
+
+.people-bulk-field :disabled {
+  cursor: not-allowed;
+}
+
+.people-bulk-panel:not(.has-selection) .people-bulk-field {
+  color: var(--color-muted);
+}
+
+.people-bulk-panel:not(.has-selection) .people-bulk-field .select,
+.people-bulk-panel:not(.has-selection) .people-bulk-field .input {
+  border-color: var(--color-line);
+  background: var(--color-canvas);
+  color: var(--color-muted);
+}
+
+.people-bulk-controls > .button {
+  min-height: 34px;
+  padding: 0 10px;
+  font-size: 12px;
+}
+
+.people-bulk-controls > .button-primary {
+  min-width: 136px;
+}
+
+.people-bulk-controls > .button-danger {
+  min-width: 128px;
 }
 
 .people-bulk-message {
@@ -1620,6 +1718,40 @@ textarea:focus-visible {
     justify-content: center;
   }
 
+  .people-bulk-panel {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 9px;
+  }
+
+  .people-bulk-heading {
+    justify-content: space-between;
+  }
+
+  .people-bulk-controls {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .people-bulk-field {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 4px;
+    grid-column: span 2;
+  }
+
+  .people-bulk-field .select,
+  .people-bulk-field .input {
+    width: 100%;
+  }
+
+  .people-bulk-controls > .button {
+    width: 100%;
+    min-width: 0;
+    grid-column: span 2;
+  }
+
   .people-row {
     grid-template-columns: minmax(0, 1fr) auto;
     gap: 10px 16px;
@@ -1674,8 +1806,13 @@ textarea:focus-visible {
     flex-direction: column;
   }
 
-  .people-bulk-field {
-    flex: 1 1 100%;
+  .people-bulk-controls {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .people-bulk-field,
+  .people-bulk-controls > .button {
+    grid-column: span 1;
   }
 
   .topbar-inner,

@@ -53,6 +53,18 @@ export function PersonScreen({ id }: Props) {
     setEditingPerson(false);
   };
 
+  const uploadPhoto = async (file: File) => {
+    const body = new FormData();
+    body.set("photo", file);
+    const data = await apiRequest<{ uploaded_photo_updated_at: string }>(`/api/contacts/${id}/photo`, { method: "POST", body });
+    setContact((current) => current ? { ...current, uploaded_photo_updated_at: data.uploaded_photo_updated_at } : current);
+  };
+
+  const removePhoto = async () => {
+    await apiRequest<{ uploaded_photo_updated_at: null }>(`/api/contacts/${id}/photo`, { method: "DELETE" });
+    setContact((current) => current ? { ...current, uploaded_photo_updated_at: null } : current);
+  };
+
   const saveInteraction = async (values: { channel: string; note: string; occurred_at?: string }) => {
     if (editingInteraction) {
       const data = await apiRequest<{ interaction?: Interaction }>(`/api/interactions/${editingInteraction.id}`, { method: "PATCH", body: JSON.stringify(values) });
@@ -87,7 +99,7 @@ export function PersonScreen({ id }: Props) {
     <>
       <Link className="person-back" href="/people"><ArrowLeft size={15} aria-hidden="true" />Back to People</Link>
       <div className="profile-header">
-        <div className="profile-identity"><PersonAvatar className="person-avatar-large" name={contact.name} photoUrl={contact.photo_url} /><div className="profile-copy"><h1>{contact.name}</h1><p>{roleLine}</p><span className={priorityClass(contact.priority)}>{contact.priority} priority</span></div></div>
+        <div className="profile-identity"><PersonAvatar contactId={contact.id} className="person-avatar-large" name={contact.name} photoUrl={contact.photo_url} uploadedPhotoUpdatedAt={contact.uploaded_photo_updated_at} /><div className="profile-copy"><h1>{contact.name}</h1><p>{roleLine}</p><span className={priorityClass(contact.priority)}>{contact.priority} priority</span></div></div>
         <div className="profile-actions">
           {contact.linkedin_url ? <a className="button button-secondary" href={contact.linkedin_url} target="_blank" rel="noreferrer"><Link2 size={15} aria-hidden="true" />LinkedIn<ArrowUpRight size={12} aria-hidden="true" /></a> : null}
           {contact.phone ? <a className="button button-secondary" href={whatsApp(contact.phone)} target="_blank" rel="noreferrer"><MessageCircle size={15} aria-hidden="true" />WhatsApp</a> : null}
@@ -105,7 +117,7 @@ export function PersonScreen({ id }: Props) {
       {contact.notes ? <div className="profile-notes"><span className="detail-label">Notes</span><p>{contact.notes}</p></div> : null}
 
       <div className="button-row" style={{ marginTop: 21 }}><button className="button button-secondary" type="button" onClick={() => setEditingPerson((open) => !open)}><Pencil size={14} aria-hidden="true" />Edit person</button><button className="button button-quiet" type="button" onClick={() => setInteractionForm(true)}><Check size={14} aria-hidden="true" />Mark contacted today</button></div>
-      {editingPerson && editValues ? <section className="create-panel" style={{ marginTop: 18 }} aria-labelledby="edit-person-heading"><div className="quick-form-head"><h2 id="edit-person-heading">Edit person</h2><button className="icon-button" type="button" onClick={() => setEditingPerson(false)} aria-label="Close edit form"><X size={16} aria-hidden="true" /></button></div><PersonForm initial={editValues} onCancel={() => setEditingPerson(false)} onSubmit={savePerson} submitLabel="Save person" /></section> : null}
+      {editingPerson && editValues ? <section className="create-panel" style={{ marginTop: 18 }} aria-labelledby="edit-person-heading"><div className="quick-form-head"><h2 id="edit-person-heading">Edit person</h2><button className="icon-button" type="button" onClick={() => setEditingPerson(false)} aria-label="Close edit form"><X size={16} aria-hidden="true" /></button></div><PersonForm contactId={id} uploadedPhotoUpdatedAt={contact.uploaded_photo_updated_at} onPhotoUpload={uploadPhoto} onPhotoRemove={removePhoto} initial={editValues} onCancel={() => setEditingPerson(false)} onSubmit={savePerson} submitLabel="Save person" /></section> : null}
 
       <section className="section-block" aria-labelledby="timeline-heading"><div className="section-heading"><h2 id="timeline-heading">Interaction history</h2><p>{interactions.length ? `${interactions.length} logged` : "Nothing logged yet"}</p></div>
         {interactionForm ? <div className="create-panel" style={{ marginBottom: 18 }}><div className="quick-form-head"><h2>Log an interaction</h2><button className="icon-button" type="button" onClick={() => setInteractionForm(false)} aria-label="Close interaction form"><X size={16} aria-hidden="true" /></button></div><InteractionForm onCancel={() => setInteractionForm(false)} onSubmit={saveInteraction} /></div> : null}
