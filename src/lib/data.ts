@@ -4,40 +4,69 @@ import type { Contact, Interaction, Suggestion } from "./types";
 import type { z } from "zod";
 import { contactSchema, contactPatchSchema, bulkContactUpdateSchema, bulkContactDeleteSchema, interactionSchema, interactionPatchSchema } from "./validation";
 
-export async function allContacts(): Promise<Contact[]> {
-  return query<Contact>("SELECT c.*, p.updated_at AS uploaded_photo_updated_at FROM contacts c LEFT JOIN contact_photos p ON p.contact_id=c.id ORDER BY c.name ASC");
+const contactColumns = `id, name, company, role, linkedin_url, photo_url, email, phone, location, priority,
+  cadence_days, notes, last_contacted_at, imported_last_contacted_at, snoozed_until, created_at, updated_at`;
+const selectedContactColumns = contactColumns.split(",").map((column) => `c.${column.trim()}`).join(", ");
+
+export async function allContacts(userId: string): Promise<Contact[]> {
+  return query<Contact>(
+    `SELECT ${selectedContactColumns}, p.updated_at AS uploaded_photo_updated_at
+     FROM contacts c LEFT JOIN contact_photos p ON p.contact_id=c.id
+     WHERE c.owner_user_id=$1 ORDER BY c.name ASC`,
+    [userId],
+  );
 }
 
-export async function hasContacts(): Promise<boolean> {
-  const [result] = await query<{ has_contacts: boolean }>("SELECT EXISTS (SELECT 1 FROM contacts) AS has_contacts");
+export async function hasContacts(userId: string): Promise<boolean> {
+  const [result] = await query<{ has_contacts: boolean }>(
+    "SELECT EXISTS (SELECT 1 FROM contacts WHERE owner_user_id=$1) AS has_contacts",
+    [userId],
+  );
   return Boolean(result?.has_contacts);
 }
 
-export async function contactById(id: string): Promise<Contact | null> {
-  return (await query<Contact>("SELECT c.*, p.updated_at AS uploaded_photo_updated_at FROM contacts c LEFT JOIN contact_photos p ON p.contact_id=c.id WHERE c.id = $1", [id]))[0] ?? null;
+export async function contactById(userId: string, id: string): Promise<Contact | null> {
+  return (await query<Contact>(
+    `SELECT ${selectedContactColumns}, p.updated_at AS uploaded_photo_updated_at
+     FROM contacts c LEFT JOIN contact_photos p ON p.contact_id=c.id
+     WHERE c.owner_user_id=$1 AND c.id=$2`,
+    [userId, id],
+  ))[0] ?? null;
 }
 
-export async function interactionsFor(id: string): Promise<Interaction[]> {
-  return query<Interaction>("SELECT * FROM interactions WHERE contact_id = $1 ORDER BY occurred_at DESC, created_at DESC", [id]);
+export async function interactionsFor(userId: string, id: string): Promise<Interaction[]> {
+  return query<Interaction>(
+    `SELECT i.* FROM interactions i
+     INNER JOIN contacts c ON c.id=i.contact_id
+     WHERE c.owner_user_id=$1 AND i.contact_id=$2
+     ORDER BY i.occurred_at DESC, i.created_at DESC`,
+    [userId, id],
+  );
 }
 
-export async function latestInteractions(): Promise<Map<string, Interaction>> {
-  const rows = await query<Interaction>("SELECT DISTINCT ON (contact_id) * FROM interactions ORDER BY contact_id, occurred_at DESC, created_at DESC");
+export async function latestInteractions(userId: string): Promise<Map<string, Interaction>> {
+  const rows = await query<Interaction>(
+    `SELECT DISTINCT ON (i.contact_id) i.* FROM interactions i
+     INNER JOIN contacts c ON c.id=i.contact_id
+     WHERE c.owner_user_id=$1
+     ORDER BY i.contact_id, i.occurred_at DESC, i.created_at DESC`,
+    [userId],
+  );
   return new Map(rows.map((row) => [row.contact_id, row]));
 }
 
-export async function decoratedContacts(now = new Date()): Promise<Suggestion[]> {
-  const [contacts, latest] = await Promise.all([allContacts(), latestInteractions()]);
+export async function decoratedContacts(userId: string, now = new Date()): Promise<Suggestion[]> {
+  const [contacts, latest] = await Promise.all([allContacts(userId), latestInteractions(userId)]);
   return contacts.map((contact) => decorateContact(contact, latest.get(contact.id) ?? null, now));
 }
 
-export async function todaySuggestions(now = new Date()) {
-  return rankSuggestions(await decoratedContacts(now), now);
+export async function todaySuggestions(userId: string, now = new Date()) {
+  return rankSuggestions(await decoratedContacts(userId, now), now);
 }
 
-export async function listContacts(options: { search?: string; priority?: string; overdue?: string; sort?: string } = {}) {
+export async function listContacts(userId: string, options: { search?: string; priority?: string; overdue?: string; sort?: string } = {}) {
   const search = options.search?.trim().toLowerCase();
-  const rows = (await decoratedContacts()).filter((contact) => {
+  const rows = (await decoratedContacts(userId)).filter((contact) => {
     if (search && ![contact.name, contact.company, contact.role].some((part) => part?.toLowerCase().includes(search))) return false;
     if (options.priority && options.priority !== "all" && contact.priority !== options.priority) return false;
     if (options.overdue === "true" && !isDue(contact)) return false;
@@ -48,89 +77,114 @@ export async function listContacts(options: { search?: string; priority?: string
   return rows;
 }
 
-export async function createContact(input: z.infer<typeof contactSchema>): Promise<Contact> {
+export async function createContact(userId: string, input: z.infer<typeof contactSchema>): Promise<Contact> {
   const data = contactSchema.parse(input);
   const [contact] = await query<Contact>(
-    `INSERT INTO contacts (name, company, role, linkedin_url, photo_url, email, phone, location, priority, cadence_days, notes)
-     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11) RETURNING *`,
-    [data.name, data.company, data.role, data.linkedin_url, data.photo_url, data.email, data.phone, data.location, data.priority, data.cadence_days, data.notes],
+    `INSERT INTO contacts (owner_user_id, name, company, role, linkedin_url, photo_url, email, phone, location, priority, cadence_days, notes)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12) RETURNING ${contactColumns}`,
+    [userId, data.name, data.company, data.role, data.linkedin_url, data.photo_url, data.email, data.phone, data.location, data.priority, data.cadence_days, data.notes],
   );
   return contact;
 }
 
-export async function updateContact(id: string, input: z.infer<typeof contactPatchSchema>): Promise<Contact | null> {
+export async function updateContact(userId: string, id: string, input: z.infer<typeof contactPatchSchema>): Promise<Contact | null> {
   const data = contactPatchSchema.parse(input);
-  const existing = await contactById(id);
+  const existing = await contactById(userId, id);
   if (!existing) return null;
   const merged = { ...existing, ...data };
   const [contact] = await query<Contact>(
-    `UPDATE contacts SET name=$2, company=$3, role=$4, linkedin_url=$5, photo_url=$6, email=$7, phone=$8, location=$9,
-      priority=$10, cadence_days=$11, notes=$12, updated_at=now() WHERE id=$1 RETURNING *`,
-    [id, merged.name, merged.company, merged.role, merged.linkedin_url, merged.photo_url, merged.email, merged.phone, merged.location, merged.priority, merged.cadence_days, merged.notes],
+    `UPDATE contacts SET name=$3, company=$4, role=$5, linkedin_url=$6, photo_url=$7, email=$8, phone=$9, location=$10,
+      priority=$11, cadence_days=$12, notes=$13, updated_at=now() WHERE owner_user_id=$1 AND id=$2 RETURNING *`,
+    [userId, id, merged.name, merged.company, merged.role, merged.linkedin_url, merged.photo_url, merged.email, merged.phone, merged.location, merged.priority, merged.cadence_days, merged.notes],
   );
-  return contact ? await contactById(id) : null;
+  return contact ? await contactById(userId, id) : null;
 }
 
-export async function updateContactsBulk(input: z.infer<typeof bulkContactUpdateSchema>): Promise<number> {
+export async function updateContactsBulk(userId: string, input: z.infer<typeof bulkContactUpdateSchema>): Promise<number> {
   const { ids, updates } = bulkContactUpdateSchema.parse(input);
   const [result] = await query<{ count: number }>(
     `WITH updated AS (
-      UPDATE contacts SET priority=COALESCE($2::text,priority), cadence_days=COALESCE($3::int,cadence_days), updated_at=now()
-      WHERE id=ANY($1::uuid[]) RETURNING id
+      UPDATE contacts SET priority=COALESCE($3::text,priority), cadence_days=COALESCE($4::int,cadence_days), updated_at=now()
+      WHERE owner_user_id=$1 AND id=ANY($2::uuid[]) RETURNING id
     ) SELECT COUNT(*)::int AS count FROM updated`,
-    [ids, updates.priority ?? null, updates.cadence_days ?? null],
+    [userId, ids, updates.priority ?? null, updates.cadence_days ?? null],
   );
   return result.count;
 }
 
-export async function deleteContactsBulk(input: z.infer<typeof bulkContactDeleteSchema>): Promise<number> {
+export async function deleteContactsBulk(userId: string, input: z.infer<typeof bulkContactDeleteSchema>): Promise<number> {
   const { ids } = bulkContactDeleteSchema.parse(input);
   const [result] = await query<{ count: number }>(
-    "WITH deleted AS (DELETE FROM contacts WHERE id=ANY($1::uuid[]) RETURNING id) SELECT COUNT(*)::int AS count FROM deleted",
-    [ids],
+    "WITH deleted AS (DELETE FROM contacts WHERE owner_user_id=$1 AND id=ANY($2::uuid[]) RETURNING id) SELECT COUNT(*)::int AS count FROM deleted",
+    [userId, ids],
   );
   return result.count;
 }
 
-export async function deleteAllContacts(): Promise<number> {
+export async function deleteAllContacts(userId: string): Promise<number> {
   const [result] = await query<{ count: number }>(
-    "WITH deleted AS (DELETE FROM contacts RETURNING id) SELECT COUNT(*)::int AS count FROM deleted",
+    "WITH deleted AS (DELETE FROM contacts WHERE owner_user_id=$1 RETURNING id) SELECT COUNT(*)::int AS count FROM deleted",
+    [userId],
   );
   return result.count;
 }
 
-async function refreshLastContacted(contactId: string) {
-  await query("UPDATE contacts SET last_contacted_at=GREATEST(imported_last_contacted_at,(SELECT MAX(occurred_at) FROM interactions WHERE contact_id=$1)), updated_at=now() WHERE id=$1", [contactId]);
+async function refreshLastContacted(userId: string, contactId: string) {
+  await query(
+    `UPDATE contacts SET last_contacted_at=GREATEST(imported_last_contacted_at,(SELECT MAX(occurred_at) FROM interactions WHERE contact_id=$2)), updated_at=now()
+     WHERE owner_user_id=$1 AND id=$2`,
+    [userId, contactId],
+  );
 }
 
-export async function createInteraction(input: z.infer<typeof interactionSchema>): Promise<Interaction> {
+export async function createInteraction(userId: string, input: z.infer<typeof interactionSchema>): Promise<Interaction> {
   const data = interactionSchema.parse(input);
   const [interaction] = await query<Interaction>(
-    "INSERT INTO interactions (contact_id, channel, note, occurred_at) VALUES ($1,$2,$3,COALESCE($4::timestamptz,now())) RETURNING *",
-    [data.contact_id, data.channel, data.note, data.occurred_at ?? null],
+    `INSERT INTO interactions (contact_id, channel, note, occurred_at)
+     SELECT c.id, $3, $4, COALESCE($5::timestamptz,now()) FROM contacts c
+     WHERE c.owner_user_id=$1 AND c.id=$2
+     RETURNING *`,
+    [userId, data.contact_id, data.channel, data.note, data.occurred_at ?? null],
   );
-  await refreshLastContacted(data.contact_id);
+  if (!interaction) {
+    const error = new Error("Contact not found") as Error & { code: string };
+    error.code = "23503";
+    throw error;
+  }
+  await refreshLastContacted(userId, data.contact_id);
   return interaction;
 }
 
-export async function updateInteraction(id: string, input: z.infer<typeof interactionPatchSchema>): Promise<Interaction | null> {
+export async function updateInteraction(userId: string, id: string, input: z.infer<typeof interactionPatchSchema>): Promise<Interaction | null> {
   const data = interactionPatchSchema.parse(input);
   const [interaction] = await query<Interaction>(
-    `UPDATE interactions SET channel=COALESCE($2,channel), note=COALESCE($3,note),
-      occurred_at=COALESCE($4::timestamptz,occurred_at), updated_at=now() WHERE id=$1 RETURNING *`,
-    [id, data.channel ?? null, data.note ?? null, data.occurred_at ?? null],
+    `UPDATE interactions i SET channel=COALESCE($3,i.channel), note=COALESCE($4,i.note),
+      occurred_at=COALESCE($5::timestamptz,i.occurred_at), updated_at=now()
+     WHERE i.id=$2 AND EXISTS (
+       SELECT 1 FROM contacts c WHERE c.id=i.contact_id AND c.owner_user_id=$1
+     ) RETURNING i.*`,
+    [userId, id, data.channel ?? null, data.note ?? null, data.occurred_at ?? null],
   );
-  if (interaction) await refreshLastContacted(interaction.contact_id);
+  if (interaction) await refreshLastContacted(userId, interaction.contact_id);
   return interaction ?? null;
 }
 
-export async function deleteInteraction(id: string): Promise<boolean> {
-  const [interaction] = await query<Interaction>("DELETE FROM interactions WHERE id=$1 RETURNING *", [id]);
-  if (interaction) await refreshLastContacted(interaction.contact_id);
+export async function deleteInteraction(userId: string, id: string): Promise<boolean> {
+  const [interaction] = await query<Interaction>(
+    `DELETE FROM interactions i WHERE i.id=$2 AND EXISTS (
+       SELECT 1 FROM contacts c WHERE c.id=i.contact_id AND c.owner_user_id=$1
+     ) RETURNING i.*`,
+    [userId, id],
+  );
+  if (interaction) await refreshLastContacted(userId, interaction.contact_id);
   return !!interaction;
 }
 
-export async function snoozeContact(id: string, days: number) {
-  const [contact] = await query<Contact>("UPDATE contacts SET snoozed_until=now()+($2::int * interval '1 day'), updated_at=now() WHERE id=$1 RETURNING *", [id, days]);
+export async function snoozeContact(userId: string, id: string, days: number) {
+  const [contact] = await query<Contact>(
+    `UPDATE contacts SET snoozed_until=now()+($3::int * interval '1 day'), updated_at=now()
+     WHERE owner_user_id=$1 AND id=$2 RETURNING ${contactColumns}`,
+    [userId, id, days],
+  );
   return contact ?? null;
 }

@@ -64,7 +64,7 @@ export function planImport(incoming: ImportedContact[], existing: Contact[]): Im
   return plan;
 }
 
-export async function commitImport(plan: ImportPlan) {
+export async function commitImport(userId: string, plan: ImportPlan) {
   let created = 0;
   let updated = 0;
   for (let i = 0; i < plan.create.length; i += 500) {
@@ -72,13 +72,13 @@ export async function commitImport(plan: ImportPlan) {
     const rows = await query<{ id: string }>(
       `WITH incoming AS (SELECT * FROM jsonb_to_recordset($1::jsonb)
         AS x(name text, company text, role text, linkedin_url text, email text))
-       INSERT INTO contacts (name, company, role, linkedin_url, email, priority, cadence_days)
-       SELECT name, company, role, linkedin_url, email, 'normal', 45 FROM incoming x
+       INSERT INTO contacts (owner_user_id, name, company, role, linkedin_url, email, priority, cadence_days)
+       SELECT $2, name, company, role, linkedin_url, email, 'normal', 45 FROM incoming x
        WHERE NOT EXISTS (SELECT 1 FROM contacts c WHERE
-         (x.linkedin_url IS NOT NULL AND c.linkedin_url=x.linkedin_url) OR
+         c.owner_user_id=$2 AND ((x.linkedin_url IS NOT NULL AND c.linkedin_url=x.linkedin_url) OR
          (x.email IS NOT NULL AND lower(c.email)=x.email) OR
-         (x.linkedin_url IS NULL AND x.email IS NULL AND lower(c.name)=lower(x.name) AND lower(coalesce(c.company,''))=lower(coalesce(x.company,''))))
-       ON CONFLICT (linkedin_url) DO NOTHING RETURNING id`, [JSON.stringify(batch)],
+         (x.linkedin_url IS NULL AND x.email IS NULL AND lower(c.name)=lower(x.name) AND lower(coalesce(c.company,''))=lower(coalesce(x.company,'')))))
+       ON CONFLICT (owner_user_id, linkedin_url) DO NOTHING RETURNING id`, [JSON.stringify(batch), userId],
     );
     created += rows.length;
   }
@@ -90,7 +90,7 @@ export async function commitImport(plan: ImportPlan) {
        UPDATE contacts c SET company=COALESCE(NULLIF(c.company,''),x.company),
          role=COALESCE(NULLIF(c.role,''),x.role), email=COALESCE(NULLIF(c.email,''),x.email),
          linkedin_url=COALESCE(c.linkedin_url,x.linkedin_url), updated_at=now()
-       FROM incoming x WHERE c.id=x.match_id RETURNING c.id`, [JSON.stringify(batch)],
+       FROM incoming x WHERE c.id=x.match_id AND c.owner_user_id=$2 RETURNING c.id`, [JSON.stringify(batch), userId],
     );
     updated += rows.length;
   }

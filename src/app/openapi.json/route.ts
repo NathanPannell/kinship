@@ -23,9 +23,11 @@ const json = (schema: object) => ({ "application/json": { schema } });
 const get = (summary: string, schema: object, parameters?: object[]) => ({ summary, security: [{ bearerAuth: [] }], parameters, responses: { "200": { description: "Success", content: json(schema) }, "401": unauthorized } });
 
 export async function GET(request: Request) {
+  const origin = new URL(request.url).origin;
   const spec = {
-    openapi: "3.1.0", info: { title: "Kinship agent API", version: "1.0.0", description: "Personal relationship state. Create a named token on the API page and pass it as an Authorization: Bearer header. This specification is public; data endpoints require a token. The API never sends messages." },
-    servers: [{ url: new URL(request.url).origin }],
+    openapi: "3.1.0", info: { title: "Kinship agent API", version: "1.1.0", description: "Personal relationship state for the Kinship account that created the token. Create a named, revocable token on the API page and pass it as an Authorization: Bearer header. This specification is public; every data endpoint requires a token. The API never sends messages." },
+    externalDocs: { description: "Meta Muse custom connector setup", url: `${origin}/connect/muse` },
+    servers: [{ url: origin }],
     components: { securitySchemes: { bearerAuth: { type: "http", scheme: "bearer", bearerFormat: "opaque" } }, schemas: { Contact: contact, Interaction: interaction } },
     paths: {
       "/api/agent/suggestions": { get: get("Get up to three contacts due today", { type: "object", properties: { suggestions: { type: "array", items: { ...contact, properties: { ...contact.properties, days_since_contact: { type: ["integer", "null"] }, reason: { type: "string" }, latest_interaction: { anyOf: [interaction, { type: "null" }] } } } }, upcoming: { type: "array", items: contact } } }) },

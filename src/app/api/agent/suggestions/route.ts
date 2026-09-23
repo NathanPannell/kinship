@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from "next/server";
-import { requireAgentToken } from "@/lib/auth";
+import { getAgentUserId } from "@/lib/auth";
 import { todaySuggestions } from "@/lib/data";
 import { failure } from "@/lib/http";
 export async function GET(request: NextRequest) {
-  const denied = await requireAgentToken(request); if (denied) return denied;
-  try { return NextResponse.json(await todaySuggestions()); }
+  const userId = await getAgentUserId(request);
+  if (!userId) return NextResponse.json({ error: "Unauthorized" }, { status: 401, headers: { "Cache-Control": "no-store", "WWW-Authenticate": "Bearer" } });
+  try { return NextResponse.json(await todaySuggestions(userId)); }
   catch (error) { return failure(error); }
 }

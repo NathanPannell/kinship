@@ -15,6 +15,7 @@ const contact = {
   priority: "high" as const,
   cadence_days: 15,
 };
+const userId = "11111111-1111-4111-8111-111111111111";
 
 describe("onboarding commit", () => {
   beforeEach(() => query.mockReset());
@@ -49,7 +50,7 @@ describe("onboarding commit", () => {
 
   it("upserts normalized contacts and stores only the imported date baseline", async () => {
     query.mockResolvedValueOnce([{ created: 1, updated: 0, contacts: [{ id: "contact-1", linkedin_url: "https://www.linkedin.com/in/Maya" }] }]);
-    const result = await commitOnboarding({ contacts: [contact] });
+    const result = await commitOnboarding(userId, { contacts: [contact] });
 
     expect(result).toMatchObject({ created: 1, updated: 0, duplicatesSkipped: 0, contacts: [{ id: "contact-1" }] });
     expect(query).toHaveBeenCalledOnce();
@@ -58,12 +59,15 @@ describe("onboarding commit", () => {
     expect(sent[0]).toMatchObject({ linkedin_url: "https://www.linkedin.com/in/Maya", email: "maya@example.com" });
     expect(statement).toContain("imported_last_contacted_at = GREATEST");
     expect(statement).toContain("last_contacted_at = GREATEST");
+    expect(statement).toContain("c.owner_user_id = $2");
+    expect(statement).toContain("owner_user_id, name");
+    expect(parameters[1]).toBe(userId);
     expect(statement).not.toMatch(/INSERT\s+INTO\s+interactions/i);
   });
 
   it("matches an existing contact by email when the incoming row has a LinkedIn URL", async () => {
     query.mockResolvedValueOnce([{ created: 0, updated: 1, contacts: [{ id: "contact-existing", linkedin_url: contact.linkedin_url }] }]);
-    await commitOnboarding({ contacts: [contact] });
+    await commitOnboarding(userId, { contacts: [contact] });
 
     const [statement] = query.mock.calls[0] as [string, string[]];
     expect(statement).toContain("email_candidate.id AS email_id");
@@ -73,7 +77,7 @@ describe("onboarding commit", () => {
   });
 
   it("does not query the database when no contacts are selected", async () => {
-    const result = await commitOnboarding({ contacts: [] });
+    const result = await commitOnboarding(userId, { contacts: [] });
     expect(result).toMatchObject({ created: 0, updated: 0, duplicatesSkipped: 0, contacts: [] });
     expect(query).not.toHaveBeenCalled();
   });

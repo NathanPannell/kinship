@@ -1,15 +1,16 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import { NextRequest, NextResponse } from "next/server";
+import { NextRequest } from "next/server";
 import sharp from "sharp";
 
-const mocks = vi.hoisted(() => ({ query: vi.fn(), requireApiSession: vi.fn() }));
+const mocks = vi.hoisted(() => ({ query: vi.fn(), getApiUserId: vi.fn() }));
 
 vi.mock("@/lib/db", () => ({ query: mocks.query }));
-vi.mock("@/lib/auth", () => ({ requireApiSession: mocks.requireApiSession }));
+vi.mock("@/lib/auth", () => ({ getApiUserId: mocks.getApiUserId }));
 
 import { DELETE, GET, POST } from "./route";
 
 const contactId = "b342ae0e-690e-4d71-8f68-25e1084a44d3";
+const userId = "11111111-1111-4111-8111-111111111111";
 const origin = "https://crm.example";
 const context = { params: Promise.resolve({ id: contactId }) };
 
@@ -22,13 +23,13 @@ describe("contact photo route", () => {
 
   beforeEach(() => {
     storedImage = null;
-    mocks.requireApiSession.mockReset().mockResolvedValue(null);
+    mocks.getApiUserId.mockReset().mockResolvedValue(userId);
     mocks.query.mockReset().mockImplementation(async (statement: string, params: unknown[] = []) => {
       if (statement.includes("INSERT INTO contact_photos")) {
         storedImage = Buffer.from(params[1] as string, "base64");
         return [{ updated_at: "2026-09-23T20:00:00.000Z" }];
       }
-      if (statement.includes("encode(image_data, 'base64')")) {
+      if (statement.includes("encode(p.image_data, 'base64')")) {
         return storedImage ? [{ image_base64: storedImage.toString("base64"), updated_at: "2026-09-23T20:00:00.000Z" }] : [];
       }
       if (statement.includes("SELECT EXISTS (SELECT 1 FROM contacts")) return [{ exists: true }];
@@ -50,6 +51,7 @@ describe("contact photo route", () => {
     expect(storedImage).not.toBeNull();
     expect((await sharp(storedImage as Buffer).metadata()).format).toBe("webp");
     expect(mocks.query.mock.calls[0][1][0]).toBe(contactId);
+    expect(mocks.query.mock.calls[0][1][2]).toBe(userId);
 
     const served = await GET(request(`/api/contacts/${contactId}/photo`), context);
     expect(served.status).toBe(200);
@@ -64,7 +66,7 @@ describe("contact photo route", () => {
   });
 
   it("requires an authenticated session to serve the image", async () => {
-    mocks.requireApiSession.mockResolvedValueOnce(NextResponse.json({ error: "Unauthorized" }, { status: 401 }));
+    mocks.getApiUserId.mockResolvedValueOnce(null);
     const response = await GET(request(`/api/contacts/${contactId}/photo`), context);
     expect(response.status).toBe(401);
     expect(mocks.query).not.toHaveBeenCalled();

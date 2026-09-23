@@ -1,10 +1,15 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { NextRequest } from "next/server";
 
-const { query } = vi.hoisted(() => ({ query: vi.fn() }));
+const { query, getAgentUserId } = vi.hoisted(() => ({ query: vi.fn(), getAgentUserId: vi.fn() }));
 vi.mock("@/lib/db", () => ({ query }));
+vi.mock("@/lib/auth", () => ({
+  getAgentUserId,
+  legacyOwnerUserId: "00000000-0000-4000-8000-000000000001",
+}));
 
 import { POST } from "./route";
+import { legacyOwnerUserId } from "@/lib/auth";
 
 const base = "https://example.com/api/agent/contacts";
 const token = "a".repeat(32);
@@ -26,16 +31,16 @@ function request(body: unknown, authorized = true) {
 
 beforeEach(() => {
   vi.clearAllMocks();
-  vi.stubEnv("AGENT_API_TOKEN", token);
+  getAgentUserId.mockImplementation(async (incoming: NextRequest) =>
+    incoming.headers.get("authorization") === `Bearer ${token}` ? legacyOwnerUserId : null,
+  );
   query.mockImplementation(async (_sql: string, values: unknown[]) => [{
     id: ids[query.mock.calls.length - 1],
-    name: values[0],
-    priority: values[8],
-    cadence_days: values[9],
+    name: values[1],
+    priority: values[9],
+    cadence_days: values[10],
   }]);
 });
-
-afterEach(() => vi.unstubAllEnvs());
 
 describe("POST /api/agent/contacts", () => {
   it("creates a name-only contact with low priority and a 60-day cadence", async () => {
@@ -49,7 +54,7 @@ describe("POST /api/agent/contacts", () => {
     expect(query).toHaveBeenCalledOnce();
     expect(query.mock.calls[0][0]).toContain("INSERT INTO contacts");
     expect(query.mock.calls[0][1]).toEqual([
-      "Ada Lovelace", null, null, null, null, null, null, null, "low", 60, null,
+      legacyOwnerUserId, "Ada Lovelace", null, null, null, null, null, null, null, "low", 60, null,
     ]);
   });
 
@@ -61,7 +66,7 @@ describe("POST /api/agent/contacts", () => {
     expect(second.status).toBe(201);
     expect((await first.json()).contact.id).toBe(ids[0]);
     expect((await second.json()).contact.id).toBe(ids[1]);
-    expect(query.mock.calls.map((call) => call[1][0])).toEqual(["Alex Kim", "Alex Kim"]);
+    expect(query.mock.calls.map((call) => call[1][1])).toEqual(["Alex Kim", "Alex Kim"]);
   });
 
   it("accepts optional details and explicit priority and cadence overrides", async () => {
@@ -81,7 +86,7 @@ describe("POST /api/agent/contacts", () => {
 
     expect(response.status).toBe(201);
     expect(query.mock.calls[0][1]).toEqual([
-      "Grace Hopper", "Navy", "Engineer", "https://www.linkedin.com/in/grace-hopper",
+      legacyOwnerUserId, "Grace Hopper", "Navy", "Engineer", "https://www.linkedin.com/in/grace-hopper",
       "https://example.com/grace.jpg", "grace@example.com", "555-0100", "New York",
       "high", 14, "Met at an event",
     ]);

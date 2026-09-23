@@ -68,7 +68,7 @@ export type OnboardingCommitResult = {
   contacts: { id: string; linkedin_url: string | null }[];
 };
 
-export async function commitOnboarding(input: unknown): Promise<OnboardingCommitResult> {
+export async function commitOnboarding(userId: string, input: unknown): Promise<OnboardingCommitResult> {
   const parsed = onboardingCommitSchema.parse(input);
   const { contacts, duplicatesSkipped } = dedupeOnboardingContacts(parsed.contacts);
   if (contacts.length === 0) return { created: 0, updated: 0, duplicatesSkipped, contacts: [] };
@@ -96,6 +96,7 @@ export async function commitOnboarding(input: unknown): Promise<OnboardingCommit
            ), '/+$', ''
          ) AS canonical_linkedin_url
        FROM contacts c
+       WHERE c.owner_user_id = $2
      ),
      identity_matches AS MATERIALIZED (
        SELECT i.*, url_candidate.id AS url_id, email_candidate.id AS email_id,
@@ -152,19 +153,19 @@ export async function commitOnboarding(input: unknown): Promise<OnboardingCommit
          last_contacted_at = GREATEST(c.last_contacted_at, m.last_contacted_at),
          updated_at = now()
        FROM matching m
-       WHERE c.id = m.existing_id
+       WHERE c.id = m.existing_id AND c.owner_user_id = $2
        RETURNING c.id, c.linkedin_url, m.input_index
      ),
      inserted AS (
        INSERT INTO contacts (
-         name, company, role, linkedin_url, email, location, photo_url,
+         owner_user_id, name, company, role, linkedin_url, email, location, photo_url,
          priority, cadence_days, imported_last_contacted_at, last_contacted_at
        )
-       SELECT name, company, role, linkedin_url, email, location, photo_url,
+       SELECT $2, name, company, role, linkedin_url, email, location, photo_url,
          priority, cadence_days, last_contacted_at, last_contacted_at
        FROM matching
        WHERE existing_id IS NULL
-       ON CONFLICT (linkedin_url) DO UPDATE SET
+       ON CONFLICT (owner_user_id, linkedin_url) DO UPDATE SET
          name = COALESCE(NULLIF(contacts.name, ''), EXCLUDED.name),
          company = COALESCE(NULLIF(contacts.company, ''), EXCLUDED.company),
          role = COALESCE(NULLIF(contacts.role, ''), EXCLUDED.role),
@@ -176,18 +177,19 @@ export async function commitOnboarding(input: unknown): Promise<OnboardingCommit
          imported_last_contacted_at = GREATEST(contacts.imported_last_contacted_at, EXCLUDED.imported_last_contacted_at),
          last_contacted_at = GREATEST(contacts.last_contacted_at, EXCLUDED.last_contacted_at),
          updated_at = now()
-       RETURNING id, linkedin_url, email, name, company
+       RETURNING id, owner_user_id, linkedin_url, email, name, company
      ),
      resolved AS (
        SELECT input_index, id, linkedin_url FROM updated
        UNION ALL
        SELECT m.input_index, i.id, i.linkedin_url
        FROM matching m
-       JOIN inserted i ON
+       JOIN inserted i ON i.owner_user_id = $2 AND (
          (m.linkedin_url IS NOT NULL AND i.linkedin_url = m.linkedin_url)
          OR (m.linkedin_url IS NULL AND m.email IS NOT NULL AND lower(i.email) = m.email)
          OR (m.linkedin_url IS NULL AND m.email IS NULL AND lower(i.name) = lower(m.name)
            AND lower(coalesce(i.company, '')) = lower(coalesce(m.company, '')))
+       )
        WHERE m.existing_id IS NULL
      ),
      summary AS (
@@ -204,7 +206,7 @@ export async function commitOnboarding(input: unknown): Promise<OnboardingCommit
        ) AS contacts
      FROM summary LEFT JOIN resolved ON true
      GROUP BY summary.created, summary.updated, summary.skipped`,
-    [JSON.stringify(contacts)],
+    [JSON.stringify(contacts), userId],
   );
 
   return {
