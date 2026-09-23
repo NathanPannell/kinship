@@ -69,7 +69,10 @@ try {
   for ($attempt=1; $attempt -le 12 -and $consecutive -lt 3; $attempt++) {
     try {
       $remainingBranches = @(Get-NeonBranches | Where-Object { $_.id -eq $journal.resources.neonBranchId -or $_.name -match "^networking-crm-pr-$PullRequest-[0-9a-f]{12}-[0-9a-f]{8}$" })
-      $remainingDeployments = @(Get-VercelDeployments | Where-Object { $_.uid -eq $journal.resources.vercelDeploymentId -or $_.id -eq $journal.resources.vercelDeploymentId -or $_.meta.previewPR -eq "$PullRequest" })
+      $remainingDeployments = @(Get-VercelDeployments | Where-Object {
+        ($journal.resources.vercelDeploymentId -and ($_.uid -eq $journal.resources.vercelDeploymentId -or $_.id -eq $journal.resources.vercelDeploymentId)) -or
+        $_.meta.previewPR -eq "$PullRequest"
+      })
       $absent = ($remainingBranches.Count -eq 0 -and $remainingDeployments.Count -eq 0)
       $journal.observations += @{ at=[DateTime]::UtcNow.ToString('o'); neonAbsent=($remainingBranches.Count -eq 0); vercelAbsent=($remainingDeployments.Count -eq 0) }
       Save-Journal $paths $journal
