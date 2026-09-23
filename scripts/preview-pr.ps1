@@ -97,7 +97,19 @@ try {
     $role = @($roles.roles | Where-Object { -not $_.protected } | Select-Object -First 1)
     if ($role.Count -ne 1) { throw 'Could not identify one application database role.' }
     Add-Event $paths $journal 'create-neon-database' 'intent'
-    $database = Invoke-Neon POST "$neonPath/branches/$($created.branch.id)/databases" @{ database=@{ name=$journal.resources.neonDatabaseName; owner_name=$role[0].name } }
+    $databasePath = "$neonPath/branches/$($created.branch.id)/databases"
+    $database = $null
+    for ($attempt = 1; $attempt -le 6; $attempt++) {
+      try {
+        $database = Invoke-Neon POST $databasePath @{ database=@{ name=$journal.resources.neonDatabaseName; owner_name=$role[0].name } }
+        break
+      } catch {
+        $existing = @( (Invoke-Neon GET $databasePath).databases | Where-Object { $_.name -eq $journal.resources.neonDatabaseName } )
+        if ($existing.Count -eq 1) { $database = @{ database=$existing[0] }; break }
+        if ($attempt -eq 6) { throw }
+        Start-Sleep -Seconds 5
+      }
+    }
     if ($database.database.name -ne $journal.resources.neonDatabaseName -or $database.database.branch_id -ne $created.branch.id) { throw 'Neon returned an unexpected database identity.' }
     Add-Event $paths $journal 'create-neon-database' 'complete'
 
