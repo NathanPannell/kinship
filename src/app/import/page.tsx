@@ -1,7 +1,6 @@
 import { requirePageSession } from "@/lib/auth";
-import { AppShell } from "@/components/app-shell";
-import { ImportScreen } from "@/components/import-screen";
+import { redirect } from "next/navigation";
 export default async function ImportPage() {
   await requirePageSession();
-  return <AppShell><ImportScreen /></AppShell>;
+  redirect("/onboarding");
 }

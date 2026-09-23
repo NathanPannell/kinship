@@ -9,5 +9,6 @@ describe("interaction creation", () => {
     await createInteraction({ contact_id: "11111111-1111-4111-8111-111111111111", channel: "In person", note: "Coffee" });
     expect(query).toHaveBeenCalledTimes(2);
     expect(query.mock.calls[1][0]).toContain("MAX(occurred_at)");
+    expect(query.mock.calls[1][0]).toContain("GREATEST(imported_last_contacted_at");
   });
 });

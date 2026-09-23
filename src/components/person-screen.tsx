@@ -5,7 +5,8 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import { PersonForm } from "./person-form";
 import { InteractionForm } from "./interaction-form";
 import type { Contact, Interaction } from "./crm-types";
-import { apiRequest, contactToForm, formatDateTime, initials, priorityClass, relativeContactDate } from "./crm-utils";
+import { apiRequest, contactToForm, formatDateTime, priorityClass, relativeContactDate } from "./crm-utils";
+import { PersonAvatar } from "./person-avatar";
 import { ArrowLeft, ArrowUpRight, CalendarDays, Check, Link2, Mail, MessageCircle, Pencil, Plus, RefreshCw, X } from "./icons";
 
 type Props = { id: string };
@@ -86,7 +87,7 @@ export function PersonScreen({ id }: Props) {
     <>
       <Link className="person-back" href="/people"><ArrowLeft size={15} aria-hidden="true" />Back to People</Link>
       <div className="profile-header">
-        <div className="profile-identity"><span className="person-avatar-large" aria-hidden="true">{initials(contact.name)}</span><div className="profile-copy"><h1>{contact.name}</h1><p>{roleLine}</p><span className={priorityClass(contact.priority)}>{contact.priority} priority</span></div></div>
+        <div className="profile-identity"><PersonAvatar className="person-avatar-large" name={contact.name} photoUrl={contact.photo_url} /><div className="profile-copy"><h1>{contact.name}</h1><p>{roleLine}</p><span className={priorityClass(contact.priority)}>{contact.priority} priority</span></div></div>
         <div className="profile-actions">
           {contact.linkedin_url ? <a className="button button-secondary" href={contact.linkedin_url} target="_blank" rel="noreferrer"><Link2 size={15} aria-hidden="true" />LinkedIn<ArrowUpRight size={12} aria-hidden="true" /></a> : null}
           {contact.phone ? <a className="button button-secondary" href={whatsApp(contact.phone)} target="_blank" rel="noreferrer"><MessageCircle size={15} aria-hidden="true" />WhatsApp</a> : null}

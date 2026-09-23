@@ -24,6 +24,7 @@ export type Contact = {
   company?: string | null;
   role?: string | null;
   linkedin_url?: string | null;
+  photo_url?: string | null;
   email?: string | null;
   phone?: string | null;
   location?: string | null;
@@ -31,6 +32,7 @@ export type Contact = {
   cadence_days: number;
   notes?: string | null;
   last_contacted_at?: string | null;
+  imported_last_contacted_at?: string | null;
   created_at?: string | null;
   updated_at?: string | null;
   snoozed_until?: string | null;
@@ -48,6 +50,7 @@ export type ContactFormValues = {
   company: string;
   role: string;
   linkedin_url: string;
+  photo_url: string;
   email: string;
   phone: string;
   location: string;

@@ -8,7 +8,7 @@ import { FileUp, HeartHandshake, Inbox, Users } from "./icons";
 const navItems = [
   { href: "/", label: "Today", icon: Inbox },
   { href: "/people", label: "People", icon: Users },
-  { href: "/import", label: "Import", icon: FileUp },
+  { href: "/onboarding", label: "Import", icon: FileUp },
 ];
 
 export function AppShell({ children }: { children: ReactNode }) {
