@@ -150,7 +150,7 @@ try {
     $url = @($deployOutput | Where-Object { $_ -match '^https://[A-Za-z0-9.-]+$' } | Select-Object -Last 1)[0]
     if (-not $url) { throw 'Vercel deployment URL unavailable. Recover by release metadata.' }
     $deployment = Invoke-Vercel GET "/v13/deployments/$([Uri]::EscapeDataString($url.Replace('https://','')))"
-    if ($deployment.projectId -ne $script:PreviewConfig.VercelProjectId -or $deployment.target -ne 'preview' -or $deployment.meta.previewRelease -ne $release -or $deployment.meta.previewSHA -ne $pr.headRefOid -or -not $deployment.id) { throw 'Vercel deployment identity mismatch.' }
+    if ($deployment.projectId -ne $script:PreviewConfig.VercelProjectId -or $deployment.target -notin @($null,'preview') -or $deployment.meta.previewRelease -ne $release -or $deployment.meta.previewSHA -ne $pr.headRefOid -or -not $deployment.id) { throw 'Vercel deployment identity mismatch.' }
     $journal.resources.vercelDeploymentId = $deployment.id
     $journal.resources.vercelUrl = $url
     Add-Event $paths $journal 'create-vercel-deployment' 'complete'

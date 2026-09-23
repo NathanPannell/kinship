@@ -40,10 +40,10 @@ try {
   if ($deployMatches.Count -gt 1) { throw 'Multiple Vercel deployments match release identity.' }
   if ($journal.resources.vercelDeploymentId) {
     $deployById = @($deployments | Where-Object { $_.uid -eq $journal.resources.vercelDeploymentId -or $_.id -eq $journal.resources.vercelDeploymentId })
-    if ($deployById.Count -gt 1 -or ($deployById.Count -eq 1 -and ($deployById[0].target -ne 'preview' -or $deployById[0].meta.previewRelease -ne $journal.release))) { throw 'Recorded Vercel deployment identity mismatch.' }
+    if ($deployById.Count -gt 1 -or ($deployById.Count -eq 1 -and ($deployById[0].target -notin @($null,'preview') -or $deployById[0].meta.previewRelease -ne $journal.release))) { throw 'Recorded Vercel deployment identity mismatch.' }
     if ($deployMatches.Count -eq 1 -and $deployMatches[0].uid -ne $journal.resources.vercelDeploymentId -and $deployMatches[0].id -ne $journal.resources.vercelDeploymentId) { throw 'Release metadata points to another Vercel deployment.' }
   } elseif ($deployMatches.Count -eq 1) {
-    if ($deployMatches[0].target -ne 'preview') { throw 'Recovered Vercel deployment is not a preview.' }
+    if ($deployMatches[0].target -notin @($null,'preview')) { throw 'Recovered Vercel deployment is not a preview.' }
     $journal.resources.vercelDeploymentId = if ($deployMatches[0].uid) { $deployMatches[0].uid } else { $deployMatches[0].id }
     Add-Event $paths $journal 'recover-vercel-deployment' 'complete'
   }
