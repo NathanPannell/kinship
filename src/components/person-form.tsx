@@ -151,7 +151,7 @@ export function PersonForm({ initial, onSubmit, onCancel, submitLabel = "Save pe
         <span className="field-label">Notes</span>
         <textarea className="textarea" value={values.notes} onChange={(event) => update("notes", event.target.value)} placeholder="What should you remember about this relationship?" />
       </label>
-      {error ? <p className="form-error">{error}</p> : null}
+      {error ? <p className="form-error" role="alert">{error}</p> : null}
       <div className="button-row form-field-full">
         <button className="button button-primary" type="submit" disabled={saving}>{saving ? "Saving..." : submitLabel}</button>
         {onCancel ? <button className="button button-quiet" type="button" onClick={onCancel} disabled={saving}>Cancel</button> : null}

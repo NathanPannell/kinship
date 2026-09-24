@@ -94,14 +94,14 @@ function SuggestionCard({ suggestion, onRefresh }: { suggestion: Suggestion; onR
           <button className="button button-secondary" type="button" onClick={() => setActiveForm("interaction")}><Plus size={15} aria-hidden="true" />Add note</button>
           <div style={{ position: "relative" }}>
             <button className="button button-quiet" type="button" onClick={() => setSnoozeOpen((open) => !open)} aria-expanded={snoozeOpen}><Clock3 size={15} aria-hidden="true" />Snooze</button>
-            {snoozeOpen ? <div className="snooze-menu" role="menu">
-              {[7, 14, 30].map((days) => <button key={days} type="button" role="menuitem" onClick={() => void snooze(days)} disabled={snoozing}>For {days} days</button>)}
+            {snoozeOpen ? <div className="snooze-menu" aria-label="Snooze duration">
+              {[7, 14, 30].map((days) => <button key={days} type="button" onClick={() => void snooze(days)} disabled={snoozing}>For {days} days</button>)}
             </div> : null}
           </div>
         </div>
       </div>
 
-      {message ? <p className="inline-error" style={{ margin: "10px 20px" }}>{message}</p> : null}
+      {message ? <p className="inline-error" role="alert" style={{ margin: "10px 20px" }}>{message}</p> : null}
       {activeForm ? <div className="quick-form">
         <div className="quick-form-head"><strong>{activeForm === "contacted" ? "Log today’s touchpoint" : "Add an interaction"}</strong><button className="icon-button" type="button" onClick={() => setActiveForm(null)} aria-label="Close interaction form">×</button></div>
         <InteractionForm compact onCancel={() => setActiveForm(null)} onSubmit={logInteraction} />
@@ -110,7 +110,7 @@ function SuggestionCard({ suggestion, onRefresh }: { suggestion: Suggestion; onR
   );
 }
 
-export function TodayScreen() {
+export function TodayScreen({ hasContacts = true }: { hasContacts?: boolean }) {
   const [suggestions, setSuggestions] = useState<Suggestion[]>([]);
   const [upcoming, setUpcoming] = useState<Suggestion[]>([]);
   const [loading, setLoading] = useState(true);
@@ -151,7 +151,7 @@ export function TodayScreen() {
 
       <section aria-labelledby="today-heading">
         <div className="section-heading"><h2 id="today-heading">People to reach out to</h2><p>{suggestions.length ? `${suggestions.length} in focus` : "Your daily focus"}</p></div>
-        {loading ? <div className="loading-state"><div><RefreshCw size={20} className="spin" aria-hidden="true" /><strong>Finding your next conversations...</strong><p>Checking cadence, priority, and your recent notes.</p></div></div> : error ? <div className="error-state"><div><RefreshCw size={20} aria-hidden="true" /><strong>Could not load your suggestions</strong><p>{error}</p><button className="button button-secondary" type="button" onClick={() => { setLoading(true); void load(); }}>Try again</button></div></div> : suggestions.length === 0 ? <div className="empty-state"><div><Sparkles size={21} aria-hidden="true" /><strong>Your daily list is clear.</strong><p>Add a few people or import your LinkedIn connections to start building your circle.</p><Link className="button button-primary" href="/people" style={{ marginTop: 14 }}>Go to People</Link></div></div> : <div className="suggestion-list">{suggestions.map((suggestion) => <SuggestionCard key={suggestion.id} suggestion={suggestion} onRefresh={load} />)}</div>}
+        {loading ? <div className="loading-state"><div><RefreshCw size={20} className="spin" aria-hidden="true" /><strong>Finding your next conversations...</strong><p>Checking cadence, priority, and your recent notes.</p></div></div> : error ? <div className="error-state"><div><RefreshCw size={20} aria-hidden="true" /><strong>Could not load your suggestions</strong><p>{error}</p><button className="button button-secondary" type="button" onClick={() => { setLoading(true); void load(); }}>Try again</button></div></div> : suggestions.length === 0 ? <div className="empty-state"><div><Sparkles size={24} aria-hidden="true" /><strong>{hasContacts ? "Your daily list is clear." : "Your network starts here."}</strong><p>{hasContacts ? "Your relationships are up to date. Browse your people or check back for the next suggested conversation." : "Import your LinkedIn connections, choose who matters, and Kinship will help you keep a natural rhythm."}</p><div className="empty-actions">{!hasContacts && <Link className="button button-accent" href="/onboarding">Import LinkedIn connections</Link>}<Link className="button button-secondary" href="/people">{hasContacts ? "Browse people" : "Add a person manually"}</Link></div></div></div> : <div className="suggestion-list">{suggestions.map((suggestion) => <SuggestionCard key={suggestion.id} suggestion={suggestion} onRefresh={load} />)}</div>}
       </section>
 
       {!loading && !error && upcoming.length > 0 ? <section className="section-block" aria-labelledby="upcoming-heading"><div className="section-heading"><h2 id="upcoming-heading">Coming up soon</h2><p>People approaching their cadence</p></div><div className="upcoming-list">{upcoming.slice(0, 5).map((person) => <Link className="upcoming-row" href={`/people/${person.id}`} key={person.id}><span className="upcoming-person"><PersonAvatar contactId={person.id} className="person-avatar" name={person.name} photoUrl={person.photo_url} uploadedPhotoUpdatedAt={person.uploaded_photo_updated_at} /><span className="upcoming-detail"><strong>{person.name}</strong><span>{[person.role, person.company].filter(Boolean).join(" at ") || "Professional connection"}</span></span></span><span className="upcoming-date"><CalendarDays size={13} aria-hidden="true" /> {formatDate(person.next_recommended_at)}</span></Link>)}</div></section> : null}
