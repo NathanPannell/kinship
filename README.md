@@ -1,78 +1,97 @@
 # Kinship
 
-A small personal networking inbox. The home page shows up to three contacts due for outreach, with their last interaction and a plain-language reason. People and profile screens cover search, editing, fast interaction logging, snoozing, and LinkedIn CSV import. Nothing sends messages automatically.
+**A small personal networking CRM and the single source of truth for your professional relationships.**
 
-## Architecture
+Kinship keeps the people, context, and follow-up history that matter to your professional life in one place, so you and your agents know who to reconnect with before a connection grows cold.
 
-One Next.js App Router application runs on Vercel. Server route handlers use the Neon serverless Postgres driver over HTTP. SQL lives in `src/lib/data.ts`; ordered migrations live in `database/migrations`. Recommendation ranking is isolated in `src/lib/recommendations.ts`. There is no ORM, worker, cron, or background polling. Neon can suspend between requests.
+**Use Kinship:** [kinship.nathanpannell.com](https://kinship.nathanpannell.com)
 
-## Environment variables
+## What you can do
 
-Copy `.env.example` to `.env.local` for local development. Do not commit real values.
+- Keep a personal record of contacts, profile details, notes, and past interactions.
+- Set a priority and a follow-up cadence for each person. Kinship surfaces up to three people due for a touchpoint, with a plain-language reason, and shows people coming up soon.
+- Import your LinkedIn Connections and messages CSV exports. Kinship reads the files in your browser so you can choose which connections to keep and use message dates to establish contact history. Message text is not uploaded or saved.
+- Give an AI agent access to the same relationship records through a named, account-scoped API token that you can revoke.
+- Use the OpenAPI description to connect Meta Muse or another tool that supports custom OpenAPI connectors.
 
-| Variable | Purpose |
-| --- | --- |
-| `DATABASE_URL` | Neon pooled connection URL for the web app |
-| `DATABASE_URL_UNPOOLED` | Direct Neon URL for migrations |
-| `DEVELOPMENT_DATABASE_URL` | Separate development branch URL, used only by the fictional seed script |
-| `SESSION_SECRET` | Random secret of at least 32 characters for signed login cookies |
-| `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET` | Google OAuth web application credentials |
-| `GOOGLE_REDIRECT_URI` | Exact registered callback, such as `https://kinship.nathanpannell.com/api/auth/google/callback` |
-| `LEGACY_OWNER_EMAIL` | Verified Google email permitted to claim contacts that predate account support |
-| `APP_REVISION` | Optional deployed Git commit SHA shown by `/api/ready` |
+Kinship helps you remember and record conversations. It does not send messages to your contacts.
 
-Google sign-in is the only login method. Sign in to create named agent tokens on the API page. Existing password, GitHub, and global agent tokens are disabled.
+## Get started
 
-## Local setup
+1. [Sign in with Google](https://kinship.nathanpannell.com/login). Each Google account has its own contacts, interactions, and API tokens.
+2. Follow the three-step introduction, then use the Import button on your empty Today page to bring in your LinkedIn Connections CSV. You can also provide your messages CSV to match last-contact dates. Review the people, choose who to track, and set a starting priority and cadence.
+3. Use **Today** to see who is due, **People** to search and manage your contacts, and a person's profile to review notes or log an interaction.
+4. To connect an agent, open **API**, create and copy a named token, then provide the agent with the app URL and the [OpenAPI description](https://kinship.nathanpannell.com/openapi.json). The token secret is shown once. Revoke it from the API page whenever you want to end access.
 
-1. `npm install`
-2. Create a Neon project and copy its pooled and direct URLs into `.env.local`.
-3. Load the environment variables in your shell, then run `npm run migrate`.
-4. For a separate development branch, set `DEVELOPMENT_DATABASE_URL` and run `npm run seed` to add fictional contacts. The seed script refuses to run when `NODE_ENV=production` and never uses `DATABASE_URL`.
-5. `npm run dev`, then open `http://localhost:3000`.
-
-Run `npm test`, `npm run lint`, and `npm run build` before deploying. Migrations are safe to rerun. Use a separate Neon development branch if you want fake contacts without putting them in your personal production data.
-
-## Google sign-in and account ownership
-
-Create a dedicated Google Cloud project and an External OAuth web client. Register `GOOGLE_REDIRECT_URI` exactly and request only `openid email profile`. Set the client ID, client secret, and redirect URI in the server environment. The callback verifies state, PKCE, nonce, signature, issuer, audience, expiration, and verified email before creating an internal user. Accounts are keyed by Google's stable subject identifier; every contact, interaction, photo, import, and API token is scoped to that internal user.
-
-Migration `006_multi_account_users.sql` assigns existing records to a legacy owner. Set `LEGACY_OWNER_EMAIL` to the original owner's verified Google address **before the first Google login**. Only that account can claim those records. For a safe cutover, apply migration 006, deploy the new app immediately, verify login and account isolation, then remove the temporary legacy default from `contacts.owner_user_id` and `api_tokens.owner_user_id`. Do not expose a second account until the new app is live.
-
-## Vercel deployment
-
-Set the production environment variables and deploy the `main` branch to the existing Vercel project. Run `npm run migrate` against the production Neon branch before deploying code that requires the new schema. Keep `SESSION_SECRET`, the Google client secret, and database URLs server-only. Do not add them with a `NEXT_PUBLIC_` prefix. `/api/ready` checks the latest applied migration when called; no automated health polling is configured.
-
-## Draft PR preview lifecycle
-
-This repository has one Vercel app and one Neon database. It has no Railway service, worker, staging branch, or staging database. The preview wrapper validates a draft PR against the current `main` commit and creates a schema-only Neon branch from the recorded **development** branch. It then creates a fresh database, applies migrations, and explicitly deploys the PR head to Vercel Preview. It never copies development contacts or persistent application secrets. The wrapper's older password and global-token smoke flow is obsolete after Google sign-in; update it before using it to test private UI journeys.
-
-Run these commands from a clean canonical repository checkout at the current `origin/main` commit. The default invocation is a provider-free plan:
-
-```powershell
-pwsh -File scripts/preview-pr.ps1 -PullRequest 123
-pwsh -File scripts/preview-pr.ps1 -PullRequest 123 -Apply
-pwsh -File scripts/teardown-preview-pr.ps1 -PullRequest 123
-pwsh -File scripts/teardown-preview-pr.ps1 -PullRequest 123 -Apply
-```
-
-Before pushing a preview branch, audit live GitHub workflow triggers and Vercel Git integration settings. Feature pushes and PR creation must create no automatic deployment. Also review Vercel system variables for external cloud trust and protection bypasses. Set `NEON_API_KEY` and `VERCEL_TOKEN` in the trusted local PowerShell process before `-Apply`; do not place them in the repository. The wrappers use the checked-in IDs in `scripts/preview-config.psd1`. Review those IDs if provider projects or the development parent change. The same Windows host and user profile owns create and teardown.
-
-The journal and lock live in `../preview-lifecycle/pr-<number>/`, outside the Git repository. The journal has IDs and checkpoints only. Do not run another create while its active record exists. If create stops after a provider call, inspect the journal and run the exact teardown command. A successful `/api/ready` check alone does not complete browser verification.
-
-## LinkedIn CSV import
-
-Export your official Connections and messages CSV files from LinkedIn, then open **Import** in the app. Each file is parsed in the browser. Review the matched dates, choose the people to track, set priority and cadence, and save only the selected contact metadata. The files and message text are not uploaded. No scraping or LinkedIn automation is used.
+For step-by-step instructions, see the [Meta Muse connector guide](https://kinship.nathanpannell.com/connect/muse). The guide also explains which actions the API allows.
 
 ## Agent API
 
-Open **API**, enter a name, and select **Create token**. Copy the token when it appears; only its hash is stored and the secret is not shown again. The same page lists tokens and lets you revoke them immediately. Send `Authorization: Bearer <token>` to:
+Kinship's API lets an agent, acting with your permission, read and update the relationship context in the account that created the token. It can:
 
-- `GET /api/agent/suggestions` for today's contacts and upcoming contacts
-- `GET /api/agent/contacts?search=...` for search and filters
-- `POST /api/agent/contacts` to create a contact with only `name` required; names may repeat, and omitted priority and cadence default to `low` and `60` days
-- `GET /api/agent/contacts/{id}` for a profile and recent interactions
-- `PATCH /api/agent/contacts/{id}` to update a profile or its follow-up settings
-- `POST /api/agent/interactions` with `contact_id`, `channel`, `note`, and optional ISO `occurred_at`
+- Get today's follow-up suggestions and upcoming contacts.
+- Search contacts and read a contact's profile and recent interactions.
+- Create or update a contact.
+- Record an interaction when you ask it to.
 
-The interactive API documentation and playground are at `/api-docs`; the public machine-readable OpenAPI 3.1 document is at `/openapi.json`. Give your agent the app base URL, the OpenAPI URL, and a token. The API page has a **Copy agent setup** action for the endpoint instructions. For Meta Muse, use the public `/connect/muse` guide. The agent API cannot delete contacts or send messages. Public `/privacy`, `/terms`, and `/data-deletion` pages explain use and removal of data.
+The API cannot delete contacts or send email, LinkedIn messages, WhatsApp messages, or other communications. Every data request requires a bearer token. The OpenAPI document is public and contains endpoint documentation, not account data.
+
+Useful links:
+
+- [API reference and request playground](https://kinship.nathanpannell.com/api-docs) (sign-in required)
+- [Public OpenAPI 3.1 JSON](https://kinship.nathanpannell.com/openapi.json)
+- [Meta Muse setup guide](https://kinship.nathanpannell.com/connect/muse)
+- [Privacy](https://kinship.nathanpannell.com/privacy)
+- [Terms](https://kinship.nathanpannell.com/terms)
+- [Data deletion](https://kinship.nathanpannell.com/data-deletion)
+
+## Privacy by design
+
+- Google sign-in creates a separate Kinship account. Contacts, interactions, photos, imports, and API tokens are scoped to that account.
+- Guided LinkedIn import parses CSV files in your browser. Only the contacts you select, their imported last-contact dates, and your preferences are saved to Kinship.
+- API token secrets are shown once and stored as hashes. Tokens can be revoked from the API page.
+- Connected agents receive the access granted by their token. Review write actions and only share a token with services you trust.
+
+Read the [privacy policy](https://kinship.nathanpannell.com/privacy) for details about data storage, providers, and deletion.
+
+## Run locally
+
+Kinship is a Next.js application backed by PostgreSQL through Neon. SQL migrations are in `database/migrations`.
+
+You will need Node.js and npm, a PostgreSQL database, and a Google OAuth web client for local sign-in.
+
+1. Install dependencies:
+
+   ```sh
+   npm ci
+   ```
+
+2. Copy `.env.example` to `.env.local` and set the values below. Register `http://localhost:3000/api/auth/google/callback` as an authorized redirect URI for your Google OAuth client.
+
+   | Variable | Purpose |
+   | --- | --- |
+   | `DATABASE_URL` | Pooled Neon connection URL used by the app |
+   | `DATABASE_URL_UNPOOLED` | Direct Neon connection URL used by migrations |
+   | `SESSION_SECRET` | Random secret with at least 32 characters |
+   | `GOOGLE_CLIENT_ID` | Google OAuth web client ID |
+   | `GOOGLE_CLIENT_SECRET` | Google OAuth web client secret |
+   | `GOOGLE_REDIRECT_URI` | Callback URL registered with Google |
+   | `DEVELOPMENT_DATABASE_URL` | Optional separate development database for fictional seed contacts |
+
+3. Apply database migrations:
+
+   ```sh
+   npm run migrate
+   ```
+
+4. Start the app:
+
+   ```sh
+   npm run dev
+   ```
+
+   Open [http://localhost:3000](http://localhost:3000).
+
+To add fictional contacts for local development, set `DEVELOPMENT_DATABASE_URL` to a separate development database and run `npm run seed`. The seed script refuses to run when `NODE_ENV=production` and never writes to `DATABASE_URL`.
+
+Available project checks are `npm test`, `npm run lint`, and `npm run build`.

@@ -27,12 +27,13 @@ export function DeleteAccount() {
     }
   }
 
-  return <div className="mt-6">
-    <label htmlFor="delete-confirmation" className="block text-sm font-medium">Type DELETE MY ACCOUNT to confirm</label>
+  return <div className="settings-delete-form">
+    <label htmlFor="delete-confirmation" className="field-label">Type DELETE MY ACCOUNT to confirm</label>
     <input id="delete-confirmation" value={confirmation} onChange={(event) => setConfirmation(event.target.value)}
-      className="mt-2 h-10 w-full max-w-sm rounded-lg border border-[#cbd7cd] px-3" autoComplete="off" />
+      className="input" autoComplete="off" aria-describedby="delete-account-hint" />
+    <p id="delete-account-hint">This action cannot be undone from Kinship.</p>
     <div><button type="button" disabled={busy || confirmation !== "DELETE MY ACCOUNT"} onClick={remove}
-      className="mt-4 rounded-lg bg-red-700 px-4 py-2 text-sm font-medium text-white disabled:opacity-40">{busy ? "Deleting…" : "Delete account and data"}</button></div>
-    {error && <p role="alert" className="mt-3 text-sm text-red-700">{error}</p>}
+      className="button button-danger">{busy ? "Deleting…" : "Permanently delete account"}</button></div>
+    {error && <p role="alert" className="form-error">{error}</p>}
   </div>;
 }

@@ -56,7 +56,7 @@ export function InteractionForm({ initial, onSubmit, onCancel, compact = false }
         <span className="field-label">What happened?</span>
         <textarea className="textarea" value={note} onChange={(event) => setNote(event.target.value)} placeholder="Coffee at Tenfold. Talked about..." autoFocus={compact} />
       </label>
-      {error ? <p className="form-error">{error}</p> : null}
+      {error ? <p className="form-error" role="alert">{error}</p> : null}
       <div className="button-row form-field-full">
         <button className="button button-accent" type="submit" disabled={saving}>{saving ? "Saving..." : initial ? "Save changes" : "Save interaction"}</button>
         {onCancel ? <button className="button button-quiet" type="button" onClick={onCancel} disabled={saving}>Cancel</button> : null}
