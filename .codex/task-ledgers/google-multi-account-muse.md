@@ -10,4 +10,4 @@
 - Public privacy, terms, data deletion, Muse connector, and OpenAPI pages return 200 in production.
 - Local checks: 61 unit tests pass (3 database integration tests skipped without a DB), TypeScript, lint, and build passed. Isolated Neon branch integration and boundary tests passed, then the branch was deleted.
 - PR #7 merged as commit `15795dec112473e2afb819e9858e7cb90628d849`. Production deployment is live and browser tested.
-- Follow-up: commit migration 007 and deployed screenshots, attach evidence to the PR thread, run final checks, and close agent-created browser tabs.
+- Migration 007 and deployed screenshots merged in PR #8. Final public and authentication boundary review found no release blocker.
