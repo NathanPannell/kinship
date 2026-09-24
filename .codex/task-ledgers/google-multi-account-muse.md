@@ -1,12 +1,13 @@
-# Google sign-in and account isolation`n`n- Dedicated Google Cloud project and OAuth client`n- Per-account data ownership for all routes and tokens`n- Public privacy, terms, and data deletion pages`n- Meta Muse custom connector compatibility`n- Verify locally and on deployed URL`n
-- Google Cloud project created: Kinship CRM (kinship-crm-509522), project number 956079943627
-- OAuth branding setup awaiting user confirmation of Google API Services User Data Policy
-- Existing owner account identified in Cloud Console; migration claim will require verified email matching LEGACY_OWNER_EMAIL
-- Implemented self-service account deletion endpoint and Settings UI; focused test passes (2 cases)
-- Attached verified kinship.nathanpannell.com domain to existing Vercel networking-crm project; HTTPS /login returned 200
-- Local checks: 61 unit tests pass (3 DB integration skipped), TypeScript and production build pass; independent security review identified issues addressed in auth claim
-- Production Vercel env set: LEGACY_OWNER_EMAIL and GOOGLE_REDIRECT_URI; Google client credentials still pending Cloud consent setup
-- Isolated Neon schema-only branch br-green-cake-akxjzvuy: migrations 001-006 applied; 11 integration/boundary tests passed; branch deleted and GET returned 404
-- Draft PR: https://github.com/NathanPannell/networking-crm/pull/7, with public UI before/after captures in the PR thread
-- Pending browser-use confirmations: accept Google API Services User Data Policy, verify domain ownership in Search Console, create OAuth client
-- Production cutover remains pending those Google steps and deployment verification
+# Google sign-in, account isolation, and Muse
+
+- Google Cloud project `kinship-crm-509522` and production web OAuth client created.
+- Google OAuth branding includes the deployed homepage, privacy policy, terms, and authorized `nathanpannell.com` domain.
+- Search Console domain ownership verified with a Vercel DNS TXT record. Keep that record to retain verification.
+- OAuth audience is external and **In production**. The owner completed a live Google sign-in.
+- Vercel production uses `kinship.nathanpannell.com` and the OAuth credentials are in production environment variables.
+- Neon migrations 001 through 007 applied. Existing 59 contacts belong to the owner account, and the owner Google identity claimed that account.
+- Account ownership is enforced across contacts, interactions, imports, suggestions, photos, and API tokens. The temporary legacy owner defaults were removed after deployment.
+- Public privacy, terms, data deletion, Muse connector, and OpenAPI pages return 200 in production.
+- Local checks: 61 unit tests pass (3 database integration tests skipped without a DB), TypeScript, lint, and build passed. Isolated Neon branch integration and boundary tests passed, then the branch was deleted.
+- PR #7 merged as commit `15795dec112473e2afb819e9858e7cb90628d849`. Production deployment is live and browser tested.
+- Follow-up: commit migration 007 and deployed screenshots, attach evidence to the PR thread, run final checks, and close agent-created browser tabs.
